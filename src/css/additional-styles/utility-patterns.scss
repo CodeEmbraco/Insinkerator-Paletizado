@@ -1,0 +1,136 @@
+// Typography
+
+.h1 {
+    @apply text-4xl font-extrabold tracking-tighter;
+  }
+  
+  .h2 {
+    @apply text-3xl font-extrabold tracking-tighter;
+  }
+  
+  .h3 {
+    @apply text-3xl font-extrabold;
+  }
+  
+  .h4 {
+    @apply text-2xl font-extrabold tracking-tight;
+  }
+  
+  @screen md {
+    .h1 {
+      @apply text-5xl;
+    }
+  
+    .h2 {
+      @apply text-4xl;
+    }
+  }
+  
+  // Buttons
+  .btn,
+  .btn-lg,
+  .btn-sm,
+  .btn-xs {
+    @apply font-medium text-sm inline-flex items-center justify-center border border-transparent rounded leading-5 shadow-sm transition duration-150 ease-in-out;
+  }
+  
+  .btn {
+    @apply px-3 py-2;
+  }
+  
+  .btn-lg {
+    @apply px-4 py-3;
+  }
+  
+  .btn-sm {
+    @apply px-2 py-1;
+  }
+  
+  .btn-xs {
+    @apply px-2 py-0.5;
+  }
+  
+  // Forms
+  input[type='search']::-webkit-search-decoration,
+  input[type='search']::-webkit-search-cancel-button,
+  input[type='search']::-webkit-search-results-button,
+  input[type='search']::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-multiselect,
+  .form-select,
+  .form-checkbox,
+  .form-radio {
+    @apply text-sm text-slate-800 bg-white border;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-multiselect,
+  .form-select,
+  .form-checkbox {
+    @apply rounded;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-multiselect,
+  .form-select {
+    @apply leading-5 py-2 px-3 border-borderInput hover:border-focus focus:border-primary shadow-sm;
+  }
+  
+  .form-input,
+  .form-textarea {
+    @apply placeholder-slate-400;
+  }
+  
+  .input-container,
+  .select-container {
+    @apply w-[22.8rem] h-12 mb-[3.1rem];
+  }
+  
+  .form-select {
+    @apply pr-10;
+  }
+  
+  .form-checkbox,
+  .form-radio {
+    @apply text-primary border border-slate-300;
+  }
+  
+  .form-radio {
+    @apply rounded-md w-[24px] h-[24px];
+  }
+  
+  .form-checkbox {
+    @apply w-6 h-6 border-primary;
+  }
+  
+  .table tbody tr:nth-child(2n + 2) {
+    @apply bg-slate-50;
+  }
+  
+  /* Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  //DELETE STYLE INPUT TYPE NUMBER
+  
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
