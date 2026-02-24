@@ -223,7 +223,7 @@ export const getLastPallet = () => {
   // };
   // dispatch(addEvent(startFetchOrders));
   return axios
-    .get('http://10.13.225.20:8002/api/v1/paletization/pallets/?workstation=MX8ST010')
+    .get('http://10.13.225.20:8004/api/v1/paletization/pallets/?workstation=MX8ST010')
     .then((response) => {
       if (response.status === 200) {
         //dispatch(setLoading(false));
