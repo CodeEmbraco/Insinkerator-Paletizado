@@ -1,200 +1,85 @@
-import { forwardRef, useEffect, useState } from "react";
+import React, { forwardRef, useState, useEffect } from "react";
+import ReactToPrint from "react-to-print";
 import BarcodeGeneratorFunction from "./BarcodeGenerator";
+import NidecLogo from "../../assets/images/nidec-logo_600x400.png";
 
 const LabelPrinting = forwardRef((props, ref) => {
   const [currentDate, setCurrentDate] = useState('');
 
   useEffect(() => {
-    const options = { year: 'numeric', month: 'long', day: '2-digit' };
+    const options = {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    };
     const date = new Date();
     const formattedDate = date.toLocaleDateString('en-US', options);
-
-    // Formatear la fecha como "28/OCT/2023" sin la coma
-    const parts = formattedDate.split(' ');
-    const day = parts[1].replace(',', ''); // Elimina la coma
-    const month = parts[0].toUpperCase().slice(0, 3);
-    const year = parts[2];
-
-    const formattedDateFinal = `${day}/${month}/${year}`;
-
-    setCurrentDate(formattedDateFinal);
+    setCurrentDate(formattedDate);
   }, []);
   
-  const { qrValue, metadata } = props;
-  console.log(metadata);
+  
+  const { pallet, qty, order, product} = props;
 
-  const numeroMaterial = qrValue.slice(0, 9);
-  const numeroSerie = qrValue.slice(9);
   
   return (
-    <div ref={ref}>
+    <div ref={ref} className="page-label">
       <div ref={ref} className="page">
-        <table className="container-table">
-          <tr className="container-row">
-            <td className="row1">
-              <span>Embraco</span>
-            </td>
-            <td className="row2">
-              <span className="title">MODELO - MODEL</span>
-              <span className="content">
-                {Array.isArray(metadata) &&
-                  metadata.find((obj) => obj.ID_CARACTMATERIAL === 1)
-                    ?.DE_VALORCARACTMAT}
-              </span>
-            </td>
-          </tr>
-          <tr className="container-row">
-            <td className="row3">
-              <span className="title">CODIGO - EMBRACO PART NUMBER</span>
-              <span className="content">
-              {Array.isArray(metadata) && metadata.length > 0 ?
-                  metadata[0].ID_MATERIAL : ""}
-              </span>
-            </td>
-            <td className="row4">
-              <div className="title">
-                VOLTAJE/FRECUENCIA - VOLTAGE/FREQUENCY
-              </div>
-              <span className="content">
-                {Array.isArray(metadata) &&
-                  metadata.find((obj) => obj.ID_CARACTMATERIAL === 181)
-                    ?.DE_VALORCARACTMAT}
-              </span>
-            </td>
-          </tr>
-          <tr className="container-row">
-            <td className="row5">
-              <div className="title">
-                <div className="container-info">
-                  <span>POTENCIA</span>
-                  <span>POWER (HP)</span>
+       <div className="heading-label">
+       <div>
+        <p className="label">Product</p>
+       <h2 className="text-lg" >{product}</h2>
+       <div className="bar-code">
+                  <BarcodeGeneratorFunction value={product} />
                 </div>
-                <div className="content">
-                  <span>
-                    {Array.isArray(metadata) &&
-                      metadata.find((obj) => obj.ID_CARACTMATERIAL === 119)
-                        ?.DE_VALORCARACTMAT}
-                  </span>
+       </div>
+       <div>
+       <svg width="101.6" height="38.3" viewBox="0 0 610 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M29.3115 38.2667C22.5115 59.4667 12.9115 89.6 7.84485 105.333C2.91151 121.067 -0.688488 134.267 0.111512 134.533C0.778179 134.8 1.71151 134.267 2.24485 133.467C2.77818 132.667 9.17818 113.067 16.5115 90C23.7115 66.9334 30.3782 48 31.0448 48C32.3782 48 82.6449 129.333 83.4449 132.8C83.8449 134.4 87.7115 134.667 105.312 134.4L126.778 134L132.512 116C135.578 106.133 144.778 76.9334 152.912 51.3333C161.045 25.6 168.112 3.60001 168.512 2.26668C168.912 0.933347 168.512 1.3325e-05 167.445 1.3325e-05C166.245 1.3325e-05 164.378 3.86668 162.512 9.60001C146.378 60.9333 137.978 85.3334 136.645 85.3334C135.712 85.3334 123.312 66.1334 109.045 42.6667L83.0449 1.3325e-05H62.2448H41.5782L29.3115 38.2667Z" fill="#00A55D"/>
+<path d="M188.778 2C184.378 4.4 180.645 10.5333 177.578 20.2667C175.445 27.2 175.445 28.1333 177.445 31.0667C179.978 34.9333 184.512 36 199.312 36C212.778 36 222.378 32.6667 225.045 26.9333C227.578 21.4667 231.712 9.2 231.712 7.06667C231.712 6.13333 230.512 4.13333 229.045 2.66666C226.645 0.266665 224.645 -1.87755e-06 209.445 -1.87755e-06C197.178 0.133331 191.445 0.666665 188.778 2Z" fill="#00A55D"/>
+<path d="M307.845 21.2C304.112 32.8 301.045 42.8 301.045 43.2C301.045 43.7333 300.112 46.2667 299.045 48.9333C297.045 53.4667 296.912 53.6 294.512 51.4667C292.245 49.4667 289.045 49.2 266.245 49.6C242.778 50 239.978 50.2667 236.778 52.6667C234.912 54.1333 232.645 56.4 231.712 57.7333C230.912 59.2 225.445 75.2 219.578 93.3334C210.512 121.733 209.312 126.933 210.512 129.867C211.312 131.6 213.312 133.467 214.912 133.867C216.378 134.267 241.178 134.667 269.845 134.667H321.978L340.912 74.9334C351.445 42.1333 361.045 11.8667 362.378 7.60001L364.778 1.33216e-05H339.712H314.512L307.845 21.2ZM294.378 55.4667C296.378 57.7333 296.912 55.4667 282.912 99.7334C273.578 128.933 271.845 131.733 264.378 129.867C260.912 129.067 260.778 128.667 261.445 122.8C261.978 119.467 266.645 103.2 271.978 86.6667C280.378 61.2 282.245 56.4 285.045 55.0667C289.445 52.8 292.378 52.9333 294.378 55.4667Z" fill="#00A55D"/>
+<path d="M154.912 91.7334L141.578 134L166.112 134.4C179.712 134.533 191.045 134.4 191.312 134.133C191.978 133.6 218.378 51.2 218.378 50C218.378 49.6 207.178 49.3333 193.445 49.3333H168.378L154.912 91.7334Z" fill="#00A55D"/>
+<path d="M369.045 51.8667C366.512 53.2 363.312 56.1333 362.112 58.2667C359.578 62.5333 339.712 123.733 339.712 127.2C339.712 128.4 340.912 130.533 342.378 132C344.912 134.533 346.778 134.667 398.912 134.667C451.578 134.667 452.778 134.667 453.445 132C454.112 129.333 453.445 129.333 425.178 129.333C404.512 129.333 395.845 128.933 394.645 127.733C392.112 125.2 392.778 117.067 396.378 105.467L399.845 94.6667H432.378H464.912L471.045 75.8667C477.312 56.1333 477.445 53.7333 471.712 50.6667C470.112 49.8667 451.445 49.3333 421.445 49.3333C377.445 49.3333 373.312 49.4667 369.045 51.8667ZM422.912 54.1333C426.112 55.3333 425.578 60.4 420.778 75.6L416.512 89.3334H409.445C404.512 89.3334 402.378 88.8 402.378 87.6C402.378 86.6667 404.512 79.6 407.045 71.8667C412.512 55.4667 416.112 51.4667 422.912 54.1333Z" fill="#00A55D"/>
+<path d="M498.778 52C496.378 53.3333 493.578 55.8667 492.512 57.6C490.378 61.0667 470.378 123.467 470.378 127.067C470.378 128.267 471.578 130.533 473.045 132C475.578 134.533 477.445 134.667 529.712 134.667C582.778 134.667 583.712 134.667 583.712 132C583.712 129.467 582.778 129.333 555.178 129.333C523.312 129.333 522.912 129.2 523.312 120.133C523.578 113.867 539.045 65.6 542.112 61.3333C547.445 54.1333 551.312 53.3333 581.178 53.3333C604.512 53.3333 608.912 53.0667 609.578 51.3333C610.245 49.6 603.845 49.3333 556.645 49.3333C505.845 49.3333 502.778 49.4667 498.778 52Z" fill="#00A55D"/>
+<path d="M199.178 177.733C197.578 178.933 196.245 181.867 195.845 185.467C195.178 190.267 194.512 191.467 192.112 191.733C190.378 192 189.045 193.067 189.045 194C189.045 194.933 190.378 196 192.112 196.267C194.912 196.667 195.045 197.067 195.045 212.4V228H199.445H203.712V212V196H208.378C211.578 196 213.045 195.333 213.045 194C213.045 192.667 211.578 192 208.378 192C204.112 192 203.712 191.733 203.712 188C203.712 183.067 208.245 178.133 211.845 179.067C213.578 179.467 214.378 179.2 213.978 178.267C213.312 175.867 202.112 175.6 199.178 177.733Z" fill="black"/>
+<path d="M93.4449 191.867L86.6449 206.4L90.1115 207.333C92.1115 207.867 93.8449 207.733 93.9782 207.067C94.2449 206.533 95.8449 202.933 97.5782 199.333L100.778 192.667L104.112 200C117.978 230.533 116.378 228 121.578 228C124.245 228 126.378 227.6 126.378 227.067C126.378 226.533 123.712 220.4 120.512 213.467C117.178 206.4 112.112 195.467 109.178 188.933C106.245 182.533 103.045 177.333 102.112 177.333C101.178 177.333 97.3115 183.867 93.4449 191.867Z" fill="black"/>
+<path d="M134.378 202.667V228H139.045H143.712V202.667V177.333H139.045H134.378V202.667Z" fill="black"/>
+<path d="M154.378 202.667V228H159.045H163.712V202.667V177.333H159.045H154.378V202.667Z" fill="black"/>
+<path d="M331.712 186C331.712 190.8 331.312 194.667 330.912 194.667C330.512 194.667 328.645 193.467 326.778 192C324.912 190.533 321.845 189.333 319.845 189.333C314.645 189.333 307.845 194.133 305.578 199.333C301.712 208.8 304.112 222.667 310.512 227.2C314.512 230 323.578 230 327.712 227.067C329.978 225.467 331.045 225.333 331.445 226.4C331.712 227.333 333.712 228 335.845 228H339.712V202.667V177.333H335.712H331.712V186ZM328.245 197.467C331.445 200 331.712 200.933 331.712 210C331.712 219.067 331.445 220 328.245 222.533C323.445 226.267 321.578 226 316.912 221.467C313.712 218.133 313.045 216.533 313.045 210.667C313.045 197.333 320.112 191.067 328.245 197.467Z" fill="black"/>
+<path d="M230.245 190.533C220.645 193.6 216.645 199.2 216.645 210C216.645 218.133 219.712 224.533 225.045 227.333C230.512 230.133 240.778 229.867 245.845 226.8C256.778 220.133 257.045 200.667 246.378 193.2C242.378 190.267 234.912 189.067 230.245 190.533ZM241.178 198.133C243.845 201.067 244.378 202.933 244.378 210.267C244.378 218.133 243.978 219.2 240.645 222.133C235.978 226.133 233.712 226.133 229.712 222C226.778 219.2 226.378 217.6 226.378 210C226.378 202.4 226.778 200.8 229.712 198C233.845 193.733 237.045 193.733 241.178 198.133Z" fill="black"/>
+<path d="M387.845 191.2C374.912 195.867 371.845 214.667 382.378 224.667C389.712 231.733 407.445 230.533 411.712 222.8C414.245 218 413.045 217.067 408.912 220.533C405.045 223.867 402.378 224.533 396.378 224.133C392.912 223.733 386.378 216.8 386.378 213.333C386.378 210.8 387.312 210.667 400.378 210.667H414.378V206.267C414.378 193.867 401.178 186.267 387.845 191.2ZM401.712 198C407.578 203.733 406.245 205.333 395.712 205.333C388.245 205.333 386.378 204.933 386.378 203.333C386.378 200.267 392.512 194.667 395.712 194.667C397.312 194.667 399.978 196.133 401.712 198Z" fill="black"/>
+<path d="M430.778 191.333C427.178 192.933 423.712 196.8 423.712 199.333C423.712 199.867 425.312 198.933 427.178 197.467C433.978 192.133 444.645 195.2 445.312 202.667C445.578 205.067 445.178 205.867 443.712 205.6C442.645 205.333 439.178 205.067 435.978 205.067C425.845 205.067 419.845 211.467 421.578 220.533C423.178 228.8 433.445 231.867 442.112 226.667C445.578 224.533 446.378 224.4 446.378 226C446.378 227.333 447.712 228 450.378 228H454.378V213.6C454.378 197.467 453.178 194.4 445.578 191.2C440.112 188.933 436.245 188.933 430.778 191.333ZM443.845 210.667C445.578 211.6 446.378 213.467 446.378 216.667C446.378 221.733 443.712 224 437.845 224C430.778 224 427.712 215.333 433.312 211.467C436.778 208.933 440.112 208.8 443.845 210.667Z" fill="black"/>
+<path d="M536.245 190.667C530.512 192.533 527.178 196.667 527.178 202.267C527.178 207.867 529.312 209.733 539.045 212.667C547.578 215.067 549.978 218.933 545.578 223.2C542.378 226.533 535.178 225.867 530.512 221.867C526.645 218.667 526.378 218.533 526.378 221.067C526.378 226 532.512 229.333 541.312 229.333C548.378 229.333 549.712 228.933 553.312 225.333C556.778 221.867 557.312 220.533 556.645 216.533C555.578 210 553.978 208.533 546.245 206.667C539.978 205.067 535.712 202.533 535.712 200C535.712 197.467 540.112 194.667 544.245 194.667C546.778 194.667 550.245 195.867 552.245 197.467C556.645 200.933 557.178 197.733 552.778 193.733C549.045 190.267 541.845 189.067 536.245 190.667Z" fill="black"/>
+<path d="M262.378 209.333V228H267.045H271.712V213.333V198.667L275.312 197.2C277.312 196.533 280.378 196.133 281.978 196.667C284.512 197.2 285.045 196.8 285.045 194C285.045 191.333 284.378 190.667 281.445 190.667C279.445 190.667 276.512 192 274.778 193.6L271.712 196.4V193.6C271.712 191.2 270.912 190.667 267.045 190.667H262.378V209.333Z" fill="black"/>
+<path d="M350.378 209.333V228H354.778H359.045L358.645 214.133C358.245 200.4 358.245 200.133 361.578 197.867C363.845 196.4 366.378 196 369.045 196.533C372.645 197.2 373.045 196.933 373.045 194C373.045 191.2 372.378 190.667 369.312 190.667C367.178 190.667 364.378 191.6 362.912 192.667C359.578 195.2 358.378 195.2 358.378 192.667C358.378 191.333 357.045 190.667 354.378 190.667H350.378V209.333Z" fill="black"/>
+<path d="M464.245 191.867C463.978 192.133 463.712 200.4 463.712 210.267V228H468.378H473.045V214.267C473.045 199.067 474.378 196 481.312 196C486.112 196 487.712 200.8 487.712 215.333V228H491.712H495.712V214.267C495.712 199.067 497.045 196 503.845 196C509.578 196 510.378 198.133 510.378 213.6V228H515.045H519.712V212.8C519.712 199.6 519.312 197.2 516.912 194.133C513.445 189.733 505.312 189.333 499.578 193.333L495.845 196.133L493.045 193.333C489.845 190.133 481.445 189.733 477.578 192.667C474.378 195.067 473.045 195.2 473.045 192.933C473.045 191.467 465.578 190.533 464.245 191.867Z" fill="black"/>
+<path d="M57.0448 211.467C50.9115 212.4 37.0448 216.267 36.5115 217.2C36.1115 217.733 39.3115 217.733 43.4448 217.2C47.5782 216.667 57.8448 216.133 66.1115 216.133C82.1115 216 82.6448 216.267 79.0448 222.667C76.3782 227.333 76.5115 228 80.7782 228C83.9782 228 85.0448 227.067 87.1782 222.533L89.5782 217.067L97.7115 217.733L105.712 218.4L101.045 216.4C90.2448 211.867 69.9782 209.6 57.0448 211.467Z" fill="black"/>
+</svg>
+
+       </div>
+       </div>
+       <div className="flex justify-end">
+        <div className="mt-3">
+        <p className="label pr-4">Quantity</p>
+        </div>
+       <h3 className="text-lg">{qty}</h3>
+       </div>
+       <div className="flex justify-end">
+        <div className="bar-code">
+                  <BarcodeGeneratorFunction value={qty} />
                 </div>
-              </div>
-            </td>
-            <td className="row6">
-              <div className="title">CAPACIDAD - CAPACITY</div>
-              <div className="content-details">
-                <h6 className="content">
-                  <div className="information">
-                    <span>50Hz LBP</span>
-                  </div>
-                </h6>
-                <h6 className="content">
-                  <div className="information">
-                    <span>50Hz HBP</span>
-                  </div>
-                </h6>
-                <h6 className="content">
-                  <div className="information">
-                    <span>60Hz LBP</span>
-                    <span className="details">
-                    {Array.isArray(metadata) &&
-                  metadata.find((obj) => obj.ID_CARACTMATERIAL === 115)
-                    ?.DE_VALORCARACTMAT}
-                    </span>
-                  </div>
-                </h6>
-                <h6 className="content">
-                  <div className="information">
-                    <span>60Hz HBP</span>
-                    <span className="details"></span>
-                  </div>
-                </h6>
-              </div>
-            </td>
-          </tr>
-        </table>
-        <table className="container-table">
-          <tr className="container-row">
-            <td className="row7">
-              <div className="title" id="title-corrent">
-                <div className="container-info">
-                  <span>REFRIGERANTE</span>
-                  <span>REFRIGERANT</span>
+       </div>
+      <div className="d-flex">
+      <p className="label">Batch - Order</p>
+      <h2 className="text-lg" >{pallet + "-" + order} </h2>
+      <div>
+      <BarcodeGeneratorFunction value={pallet + "-" + order} />
                 </div>
-                <div className="content">
-                  <span>
-                    {Array.isArray(metadata) &&
-                      metadata.find((obj) => obj.ID_CARACTMATERIAL === 3)
-                        ?.DE_VALORCARACTMAT}
-                  </span>
-                </div>
-              </div>
-            </td>
-            <td className="row8">
-              <div className="title" id="title-corrent">
-                CORRIENTE - CURRENT (LRA)
-              </div>
-              <span className="content">
-                {Array.isArray(metadata) &&
-                  metadata.find((obj) => obj.ID_CARACTMATERIAL === 4)
-                    ?.DE_VALORCARACTMAT}
-              </span>
-            </td>
-            <td className="row7">
-              <div className="title" id="title-enfriador">
-                <div className="container-info">
-                  <span>ENFRIADOR ACEITE</span>
-                  <span>OIL COOLER</span>
-                </div>
-                <div className="content">
-                  <span>
-                    {Array.isArray(metadata) &&
-                      metadata.find((obj) => obj.ID_CARACTMATERIAL === 120)
-                        ?.DE_VALORCARACTMAT}
-                  </span>
-                </div>
-              </div>
-            </td>
-            <td className="row7">
-              <div className="title" id="title-phases">
-                <div className="container-info">
-                  <span>FASES</span>
-                  <span>PHASES</span>
-                </div>
-                <div className="content">
-                  <span>
-                    {Array.isArray(metadata) &&
-                      metadata.find((obj) => obj.ID_CARACTMATERIAL === 118)
-                        ?.DE_VALORCARACTMAT}
-                  </span>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </table>
-        <table className="container-table">
-          <tr className="container-row">
-            <td className="row9">
-              <div className="container-serial-code">
-                <div className="bar-code">
-                  {" "}
-                  <BarcodeGeneratorFunction value={qrValue} />
-                </div>
-                <div className="serial">
-                  <span> {qrValue.slice(0, 9)}</span>
-                  {/* Pendiente numeroSerie */}
-                  <span>{qrValue.slice(qrValue.length - 8)}</span>
-                </div>
-                <span className="made-country">
-                  HECHO <br />
-                  MANUFACTURING <br />
-                  APODACA-NL MADE IN MEXICO
-                </span>
-              </div>
-              <div>
-                <p className="date">{currentDate}</p>
-              </div>
-            </td>
-          </tr>
-        </table>
+      </div>
+      <p className="label text-black">546758 - NGANA {currentDate}</p>
+      
       </div>
     </div>
   );

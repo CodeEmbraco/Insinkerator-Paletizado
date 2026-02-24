@@ -140,10 +140,10 @@ function PaletizationView() {
           timestamp: new Date().toISOString(),
         };*/
 
-       // dispatch(addEventToPaletizationLog(getTestResultsEvent));
+        // dispatch(addEventToPaletizationLog(getTestResultsEvent));
         const condenserMaterial = orderSelected.matnr.slice(-9);
         const compressorMaterial = orderSelected.matnr.slice(-9);
-         console.log("Linea 144");
+        console.log("Linea 144");
         const data = {
           palette: palletSelected.identifier,
           condenser: code.replace(/Shift/g, "").toUpperCase(),
@@ -171,7 +171,7 @@ function PaletizationView() {
             ?.DE_VALORCARACTMAT == componentsList.length
         ) {
           notifyError(
-            "El total de montados no debe superar la cantidad por pallet"
+            "El total de montados no debe superar la cantidad por pallet",
           );
           return;
         }
@@ -183,14 +183,12 @@ function PaletizationView() {
             orderSelected.matnr.slice(-9),
             metadata.find((obj) => obj.ID_CARACTMATERIAL === 185)
               ?.DE_VALORCARACTMAT,
-            idAuto
-          )
+            idAuto,
+          ),
         );
 
         const createPalletEvent = {
-          text:
-            "Creando registro de Pallet: " +
-            idAuto,
+          text: "Creando registro de Pallet: " + idAuto,
           timestamp: new Date().toISOString(),
         };
         notifyPalletScanned(idAuto);
@@ -433,36 +431,53 @@ function PaletizationView() {
                     </button>
                   )}
                   <div>
+                    <ReactToPrint
+                      trigger={() => (
+                        <button
+                          onClick={(e) => {}}
+                          className={
+                            barcodePallet !== "Nuevo pallet"
+                              ? "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
+                              : "w-64 h-12 bg-secondary rounded text-black text-base flex justify-center hover:text-white disabled:pointer-events-none"
+                          }
+                          disabled={barcodePallet === "Nuevo pallet"}
+                        >
+                          <Barcode
+                            className="mr-2 my-auto bg-transparent"
+                            color="#ffff"
+                            size={20}
+                          />
+                          <span className="bg-transparent my-auto text-white font-semibold hover:bg-green-500">
+                            Imprimir etiqueta
+                          </span>
+                        </button>
+                      )}
+                      content={() => labelRef.current}
+                    />
 
-                  <ReactToPrint
-                    trigger={() => (
-                      <button
-                        onClick={(e) => {}}
-                        className={
-                          barcodePallet !== "Nuevo pallet"
-                            ? "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
-                            : "w-64 h-12 bg-secondary rounded text-black text-base flex justify-center hover:text-white disabled:pointer-events-none"
-                        }
-                        disabled={barcodePallet === "Nuevo pallet"}
-                      >
-                        <Barcode
-                          className="mr-2 my-auto bg-transparent"
-                          color="#ffff"
-                          size={20}
-                        />
-                        <span className="bg-transparent my-auto text-white font-semibold hover:bg-green-500">
-                          Imprimir etiqueta
-                        </span>
-                      </button>
-                    )}
-                    content={() => labelRef.current}
-                  />
-                    
                     <div style={{ display: "none" }}>
                       <LabelPrinting
                         ref={labelRef}
-                        qrValue={barcodeProduct}
-                        metadata={metadata}
+                        pallet={
+                          barcodePallet != "Nuevo pallet"
+                            ? barcodePallet
+                            : "Undefined"
+                        }
+                        qty={
+                          componentsList.length > 0
+                            ? componentsList.length
+                            : "Undefined"
+                        }
+                        order={
+                          Object.keys(orderSelected).length != 0
+                            ? orderSelected.aufnr
+                            : "Undefined"
+                        }
+                        product={
+                          Object.keys(orderSelected).length != 0
+                            ? orderSelected.matnr
+                            : "Undefined"
+                        }
                       />
                     </div>
                   </div>
@@ -493,15 +508,19 @@ function PaletizationView() {
                       }}
                       className={
                         // Si faltan componentes O ya están todos enviados a SAP, mostramos el estilo desactivado (gris/secundario)
-                        componentsList.length < editablePalletAmount || 
-                        !componentsList.some((component) => component.send_to_sap === false)
+                        componentsList.length < editablePalletAmount ||
+                        !componentsList.some(
+                          (component) => component.send_to_sap === false,
+                        )
                           ? "w-64 h-12 bg-secondary rounded text-slate-400 text-base flex justify-center cursor-not-allowed opacity-70"
                           : "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
                       }
                       disabled={
                         // El botón se bloquea si: Faltan componentes O NO hay nada pendiente por enviar a SAP
-                        componentsList.length < editablePalletAmount || 
-                        !componentsList.some((component) => component.send_to_sap === false)
+                        componentsList.length < editablePalletAmount ||
+                        !componentsList.some(
+                          (component) => component.send_to_sap === false,
+                        )
                       }
                     >
                       <span className="bg-transparent my-auto text-white font-semibold">
@@ -516,7 +535,7 @@ function PaletizationView() {
 
           <div className="max-w-full mx-4 py-0 sm:mx-auto">
             <div className="sm:flex sm:space-x-4">
-            {Object.keys(orderSelected).length === 0 ? (
+              {Object.keys(orderSelected).length === 0 ? (
                 <section className="inline-block align-bottom rounded-lg border border-slate-200 text-left overflow-hidden mb-4 w-full xl:w-1/3 xl:my-4 md:w-1/4 md:my-4">
                   <div className="bg-white xl:p-5 md:p-3">
                     <div className="sm:flex sm:items-start bg-white">
@@ -703,8 +722,6 @@ function PaletizationView() {
                   </div>
                 </section>
               </div>
-
-
 
               <section
                 style={{

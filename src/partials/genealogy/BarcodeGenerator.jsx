@@ -7,8 +7,8 @@ function BarcodeGeneratorFunction({ value }) {
   useEffect(() => {
     JsBarcode(barcodeRef.current, value, {
       format: 'CODE128',
-      width: 1.7,
-      height: 30,
+      width: 2,
+      height: 70,
       displayValue: false
     });
   }, [value]);
