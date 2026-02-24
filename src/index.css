@@ -293,3 +293,27 @@ h1 {
 #integration-modal{
   background-color: transparent !important;
 }
+
+
+.bar-code{
+  height: 60px;
+}
+
+.page-label{
+  padding: 10px;
+}
+
+.heading-label{
+  display: flex;
+  justify-content: space-between;
+}
+
+.text-lg{
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+.label{
+  font-size: 10px;
+  line-height: 1;
+}
