@@ -4,39 +4,53 @@ import BarcodeGeneratorFunction from "./BarcodeGenerator";
 import NidecLogo from "../../assets/images/nidec-logo_600x400.png";
 
 const LabelPrinting = forwardRef((props, ref) => {
-  const [currentDate, setCurrentDate] = useState('');
+  const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
     const options = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
       hour12: true,
     };
     const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-US', options);
+    const formattedDate = date.toLocaleDateString("en-US", options);
     setCurrentDate(formattedDate);
   }, []);
-  
-  
-  const { pallet, qty, order, product} = props;
 
-  
+  const { pallet, qty, order, product } = props;
+
+  const batchOrder = `${pallet}-${order}`;
+
   return (
     <div ref={ref} className="page-label">
-      <div ref={ref} className="page">
-       <div className="heading-label">
-       <div>
-        <p className="label">Product</p>
-       <h2 className="text-lg" >{product}</h2>
-       <div className="bar-code">
-                  <BarcodeGeneratorFunction value={product} />
-                </div>
-       </div>
-       <div>
-       <svg width="101.6" height="38.3" viewBox="0 0 610 230" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <div className="page">
+        <div className="heading-label">
+          <div className="flex flex-col">
+            <p className="label">Client Part Number</p>
+            <h2 className="text-lg">{pallet}</h2>
+            <div className="bar-code">
+              <BarcodeGeneratorFunction value={pallet} />
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <p className="label">Product</p>
+            <h2 className="text-lg">{product}</h2>
+            <div className="bar-code">
+              <BarcodeGeneratorFunction value={product} />
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end mt-2">
+          <svg
+            width="101.6"
+            height="38.3"
+            viewBox="0 0 610 230"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
 <path d="M29.3115 38.2667C22.5115 59.4667 12.9115 89.6 7.84485 105.333C2.91151 121.067 -0.688488 134.267 0.111512 134.533C0.778179 134.8 1.71151 134.267 2.24485 133.467C2.77818 132.667 9.17818 113.067 16.5115 90C23.7115 66.9334 30.3782 48 31.0448 48C32.3782 48 82.6449 129.333 83.4449 132.8C83.8449 134.4 87.7115 134.667 105.312 134.4L126.778 134L132.512 116C135.578 106.133 144.778 76.9334 152.912 51.3333C161.045 25.6 168.112 3.60001 168.512 2.26668C168.912 0.933347 168.512 1.3325e-05 167.445 1.3325e-05C166.245 1.3325e-05 164.378 3.86668 162.512 9.60001C146.378 60.9333 137.978 85.3334 136.645 85.3334C135.712 85.3334 123.312 66.1334 109.045 42.6667L83.0449 1.3325e-05H62.2448H41.5782L29.3115 38.2667Z" fill="#00A55D"/>
 <path d="M188.778 2C184.378 4.4 180.645 10.5333 177.578 20.2667C175.445 27.2 175.445 28.1333 177.445 31.0667C179.978 34.9333 184.512 36 199.312 36C212.778 36 222.378 32.6667 225.045 26.9333C227.578 21.4667 231.712 9.2 231.712 7.06667C231.712 6.13333 230.512 4.13333 229.045 2.66666C226.645 0.266665 224.645 -1.87755e-06 209.445 -1.87755e-06C197.178 0.133331 191.445 0.666665 188.778 2Z" fill="#00A55D"/>
 <path d="M307.845 21.2C304.112 32.8 301.045 42.8 301.045 43.2C301.045 43.7333 300.112 46.2667 299.045 48.9333C297.045 53.4667 296.912 53.6 294.512 51.4667C292.245 49.4667 289.045 49.2 266.245 49.6C242.778 50 239.978 50.2667 236.778 52.6667C234.912 54.1333 232.645 56.4 231.712 57.7333C230.912 59.2 225.445 75.2 219.578 93.3334C210.512 121.733 209.312 126.933 210.512 129.867C211.312 131.6 213.312 133.467 214.912 133.867C216.378 134.267 241.178 134.667 269.845 134.667H321.978L340.912 74.9334C351.445 42.1333 361.045 11.8667 362.378 7.60001L364.778 1.33216e-05H339.712H314.512L307.845 21.2ZM294.378 55.4667C296.378 57.7333 296.912 55.4667 282.912 99.7334C273.578 128.933 271.845 131.733 264.378 129.867C260.912 129.067 260.778 128.667 261.445 122.8C261.978 119.467 266.645 103.2 271.978 86.6667C280.378 61.2 282.245 56.4 285.045 55.0667C289.445 52.8 292.378 52.9333 294.378 55.4667Z" fill="#00A55D"/>
@@ -57,29 +71,26 @@ const LabelPrinting = forwardRef((props, ref) => {
 <path d="M464.245 191.867C463.978 192.133 463.712 200.4 463.712 210.267V228H468.378H473.045V214.267C473.045 199.067 474.378 196 481.312 196C486.112 196 487.712 200.8 487.712 215.333V228H491.712H495.712V214.267C495.712 199.067 497.045 196 503.845 196C509.578 196 510.378 198.133 510.378 213.6V228H515.045H519.712V212.8C519.712 199.6 519.312 197.2 516.912 194.133C513.445 189.733 505.312 189.333 499.578 193.333L495.845 196.133L493.045 193.333C489.845 190.133 481.445 189.733 477.578 192.667C474.378 195.067 473.045 195.2 473.045 192.933C473.045 191.467 465.578 190.533 464.245 191.867Z" fill="black"/>
 <path d="M57.0448 211.467C50.9115 212.4 37.0448 216.267 36.5115 217.2C36.1115 217.733 39.3115 217.733 43.4448 217.2C47.5782 216.667 57.8448 216.133 66.1115 216.133C82.1115 216 82.6448 216.267 79.0448 222.667C76.3782 227.333 76.5115 228 80.7782 228C83.9782 228 85.0448 227.067 87.1782 222.533L89.5782 217.067L97.7115 217.733L105.712 218.4L101.045 216.4C90.2448 211.867 69.9782 209.6 57.0448 211.467Z" fill="black"/>
 </svg>
-
-       </div>
-       </div>
-       <div className="flex justify-end">
-        <div className="mt-3">
-        <p className="label pr-4">Quantity</p>
         </div>
-       <h3 className="text-lg">{qty}</h3>
-       </div>
-       <div className="flex justify-end">
-        <div className="bar-code">
-                  <BarcodeGeneratorFunction value={qty} />
-                </div>
-       </div>
-      <div className="d-flex">
-      <p className="label">Batch - Order</p>
-      <h2 className="text-lg" >{pallet + "-" + order} </h2>
-      <div>
-      <BarcodeGeneratorFunction value={pallet + "-" + order} />
-                </div>
-      </div>
-      <p className="label text-black">546758 - NGANA {currentDate}</p>
-      
+        <div className="flex justify-between mt-4">
+          <div className="flex flex-col">
+            <p className="label">Quantity</p>
+            <h3 className="text-lg">{qty}</h3>
+            <div className="bar-code">
+              <BarcodeGeneratorFunction value={qty} />
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <p className="label">Batch - Order</p>
+            <h2 className="text-lg">{batchOrder}</h2>
+            <div className="bar-code">
+              <BarcodeGeneratorFunction value={batchOrder} />
+            </div>
+          </div>
+        </div>
+        <div className="mt-4">
+          <p className="label text-black">Date: {currentDate}</p>
+        </div>
       </div>
     </div>
   );

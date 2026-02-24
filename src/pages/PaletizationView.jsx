@@ -431,30 +431,6 @@ function PaletizationView() {
                     </button>
                   )}
                   <div>
-                    <ReactToPrint
-                      trigger={() => (
-                        <button
-                          onClick={(e) => {}}
-                          className={
-                            barcodePallet !== "Nuevo pallet"
-                              ? "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
-                              : "w-64 h-12 bg-secondary rounded text-black text-base flex justify-center hover:text-white disabled:pointer-events-none"
-                          }
-                          disabled={barcodePallet === "Nuevo pallet"}
-                        >
-                          <Barcode
-                            className="mr-2 my-auto bg-transparent"
-                            color="#ffff"
-                            size={20}
-                          />
-                          <span className="bg-transparent my-auto text-white font-semibold hover:bg-green-500">
-                            Imprimir etiqueta
-                          </span>
-                        </button>
-                      )}
-                      content={() => labelRef.current}
-                    />
-
                     <div style={{ display: "none" }}>
                       <LabelPrinting
                         ref={labelRef}
@@ -481,7 +457,29 @@ function PaletizationView() {
                       />
                     </div>
                   </div>
-                  <BrowserPrintComponent barcodeProduct={barcodeProduct} />
+                  <BrowserPrintComponent
+                    barcodeProduct={barcodeProduct}
+                    pallet={
+                      barcodePallet != "Nuevo pallet"
+                        ? barcodePallet
+                        : "Undefined"
+                    }
+                    qty={
+                      componentsList.length > 0
+                        ? componentsList.length
+                        : "Undefined"
+                    }
+                    order={
+                      Object.keys(orderSelected).length != 0
+                        ? orderSelected.aufnr
+                        : "Undefined"
+                    }
+                    product={
+                      Object.keys(orderSelected).length != 0
+                        ? orderSelected.matnr
+                        : "Undefined"
+                    }
+                  />
                   {componentsList.length === 0 ? null : isLoading ? (
                     <button
                       onClick={handleNotify}
