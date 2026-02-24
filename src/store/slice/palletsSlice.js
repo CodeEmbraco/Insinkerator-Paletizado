@@ -231,7 +231,7 @@ export const getLastPallet = () => {
         console.log(response.data);
         const objectResponse = response.data;
         const id = objectResponse.id_auto + 1; // Suma uno al id
-        const nuevoIdentificador = "ISE" + id.toString().padStart(4, "0");
+        const nuevoIdentificador = "EIN" + id.toString().padStart(4, "0");
         return {nuevoIdentificador, id};
         // dispatch(setPallet(response.data));
       }
