@@ -42,6 +42,7 @@ import {
   selectPallet,
   setComponents,
   setComponentsJoined,
+  getLastPallet,
 } from "../store/slice/palletsSlice";
 import {
   getTestResults,
