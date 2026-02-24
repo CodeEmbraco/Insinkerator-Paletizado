@@ -16,7 +16,7 @@ h1 {
 }
 
 @page {
-  size: 16.8cm 7cm; /* Tamaño de la etiqueta horizontal */
+  size: 16.8cm 11cm; /* Tamaño de la etiqueta horizontal */
   margin: 10px; /* Sin márgenes para aprovechar todo el espacio de la etiqueta */
 }
 
