@@ -90,7 +90,8 @@ function PaletizationView() {
   const [isEditingPalletAmount, setIsEditingPalletAmount] = useState(false);
   const [editablePalletAmount, setEditablePalletAmount] = useState(280);
 
-  const [barcodePallet, setBarcodePallet] = useState("Escanea pallet");
+  const [barcodePallet, setBarcodePallet] = useState("Nuevo pallet");
+  const [idAuto, setIdAuto] = useState(1);
   const [barcodeProduct, setBarcodeProduct] = useState("Escanea producto");
   const labelRef = useRef();
 
@@ -180,17 +181,18 @@ function PaletizationView() {
             code.replace(/Shift/g, "").toUpperCase(),
             orderSelected.matnr.slice(-9),
             metadata.find((obj) => obj.ID_CARACTMATERIAL === 185)
-              ?.DE_VALORCARACTMAT
+              ?.DE_VALORCARACTMAT,
+            idAuto
           )
         );
 
         const createPalletEvent = {
           text:
-            "Consultando registro de Pallet: " +
-            code.replace(/Shift/g, "").toUpperCase(),
+            "Creando registro de Pallet: " +
+            idAuto,
           timestamp: new Date().toISOString(),
         };
-        notifyPalletScanned(code.replace(/Shift/g, "").toUpperCase());
+        notifyPalletScanned(idAuto);
 
         dispatch(addEventToPaletizationLog(createPalletEvent));
       }
@@ -265,9 +267,29 @@ function PaletizationView() {
 
   // }, []);
 
+  function handleClickNewPallet() {
+    getLastPallet()
+      .then((result) => {
+        const { nuevoIdentificador, id } = result;
+        // Hacer algo con el nuevo identificador recibido
+        console.log("El nuevo identificador es:", nuevoIdentificador);
+        setBarcodePallet(nuevoIdentificador);
+        const codeScannedEvent = {
+          text: "Nuevo pallet: " + nuevoIdentificador,
+          timestamp: new Date().toISOString(),
+        };
+        dispatch(addEventToPaletizationLog(codeScannedEvent));
+        setIdAuto(id);
+      })
+      .catch((error) => {
+        // Manejar cualquier error que pueda ocurrir
+        console.error("Hubo un error:", error);
+      });
+  }
+
   function handleNew() {
     console.log("Handle new step");
-    setBarcodePallet("Escanea pallet");
+    setBarcodePallet("Nuevo pallet");
     setBarcodeProduct("Escanea producto");
     dispatch(setGlobalStatus(""));
     dispatch(setTestResults([]));
@@ -410,6 +432,30 @@ function PaletizationView() {
                     </button>
                   )}
                   <div>
+
+                  <ReactToPrint
+                    trigger={() => (
+                      <button
+                        onClick={(e) => {}}
+                        className={
+                          barcodePallet !== "Nuevo pallet"
+                            ? "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
+                            : "w-64 h-12 bg-secondary rounded text-black text-base flex justify-center hover:text-white disabled:pointer-events-none"
+                        }
+                        disabled={barcodePallet === "Nuevo pallet"}
+                      >
+                        <Barcode
+                          className="mr-2 my-auto bg-transparent"
+                          color="#ffff"
+                          size={20}
+                        />
+                        <span className="bg-transparent my-auto text-white font-semibold hover:bg-green-500">
+                          Imprimir etiqueta
+                        </span>
+                      </button>
+                    )}
+                    content={() => labelRef.current}
+                  />
                     
                     <div style={{ display: "none" }}>
                       <LabelPrinting
@@ -469,26 +515,53 @@ function PaletizationView() {
 
           <div className="max-w-full mx-4 py-0 sm:mx-auto">
             <div className="sm:flex sm:space-x-4">
-              <section className="inline-block align-bottom rounded-lg border border-slate-200 text-left overflow-hidden mb-4 w-full sm:w-1/3 sm:my-4">
-                <div className="bg-white p-5">
-                  <div className="sm:flex sm:items-start bg-white">
-                    <div className="bg-white text-center sm:mt-0 sm:ml-2 sm:text-left">
-                      <div className="flex items-center">
-                        <Grid8 className="mr-2" color="#A0A2A6" size={20} />
-                        <h3 className="bg-white text-md font-medium text-gray">
-                          Pallet
-                        </h3>
+            {Object.keys(orderSelected).length === 0 ? (
+                <section className="inline-block align-bottom rounded-lg border border-slate-200 text-left overflow-hidden mb-4 w-full xl:w-1/3 xl:my-4 md:w-1/4 md:my-4">
+                  <div className="bg-white xl:p-5 md:p-3">
+                    <div className="sm:flex sm:items-start bg-white">
+                      <div className="bg-white text-center sm:mt-0 sm:ml-2 sm:text-left">
+                        <div className="flex items-center">
+                          <Grid8 className="mr-2" color="#A0A2A6" size={20} />
+                          <h3 className="bg-white text-md font-medium text-gray">
+                            Pallet
+                          </h3>
+                        </div>
+                        <p className="bg-white xl:text-3xl md:text-lg font-bold text-black">
+                          {Object.keys(orderSelected).length === 0
+                            ? "Selecciona órden"
+                            : barcodePallet}
+                        </p>
                       </div>
-
-                      <p className="bg-white text-3xl font-bold text-black">
-                        {Object.keys(orderSelected).length === 0
-                          ? "Selecciona órden"
-                          : barcodePallet}
-                      </p>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              ) : (
+                <button
+                  onClick={handleClickNewPallet}
+                  className="inline-block align-bottom rounded-lg border border-slate-200 text-left overflow-hidden mb-4 w-full xl:w-1/3 xl:my-4 md:w-1/4 md:my-4"
+                >
+                  <div className="bg-white xl:p-5 md:p-3">
+                    <div className="sm:flex sm:items-start bg-white">
+                      <div className="bg-white text-center sm:mt-0 sm:ml-2 sm:text-left">
+                        <div className="flex items-center">
+                          <Grid8 className="mr-2" color="#A0A2A6" size={20} />
+                          <h3 className="bg-white text-md font-medium text-gray">
+                            Pallet
+                          </h3>
+                        </div>
+                        <p
+                          className="bg-white xl:text-3xl md:text-lg font-bold text-black"
+                          onClick={handleClickNewPallet}
+                        >
+                          {Object.keys(orderSelected).length === 0
+                            ? "Selecciona órden"
+                            : barcodePallet}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              )}
 
               <section className="inline-block align-bottom rounded-lg border border-slate-200 text-left overflow-hidden mb-4 w-full sm:w-1/3 sm:my-4">
                 <div className="bg-white p-5">
