@@ -395,11 +395,14 @@ export const processInSAP =
     const ItJsonInst = components
       .filter((component) => !component.send_to_sap)
       .map((component) => ({
-        sernr: component.condenser_unit_serial.slice(-8),
-        serfi: component.compressor_unit_serial.slice(-8),
+        // Sernr ejemplo: 26011208145580578A 0100490
+        // Tomaremos los ultimos 8, quitandole el espacio. Resultado final: A0100490
+        sernr: component.condenser_unit_serial.slice(-9).replace(" ", ""),
+        serfi: component.condenser_unit_serial.slice(-9).replace(" ", ""),
         matnr: component.condenser_material_code,
         matfi: component.compressor_material_code,
         tipo: "S",
+        full_serial: component.condenser_unit_serial,
       }));
 
     const xmlData = {
