@@ -145,7 +145,7 @@ function PaletizationView() {
         const compressorMaterial = orderSelected.matnr.slice(-9);
         console.log("Linea 144");
         const data = {
-          palette: palletSelected.identifier,
+          palette: barcodePallet,
           condenser: code.replace(/Shift/g, "").toUpperCase(),
           compressor: "-", //response.compressor_unit_serial,
           compressorMaterial: condenserMaterial, //compressorMaterial,
