@@ -38,7 +38,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function PrinterComponent({ barcodeProduct }) {
+export default function PrinterComponent({
+  barcodeProduct,
+  product,
+  qty,
+  pallet,
+  order,
+}) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const [deviceList, setDevices] = React.useState([]);
@@ -369,6 +375,68 @@ export default function PrinterComponent({ barcodeProduct }) {
     Print_Service.print(printer, networkCallResponse);
   };
 
+  const handlePrintZPLLabel = () => {
+    if (!printer) {
+      alert("Selecciona una impresora primero");
+      return;
+    }
+
+    const clientPartNumber = "81202A";
+    const productValue = product || "";
+    const quantity = qty || "";
+    const batchOrder = pallet && order ? `${pallet}-${order}` : "";
+    const dateLabel = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+    });
+
+    const zpl = `
+^XA
+^PW1015
+^LL609
+^CI28
+
+^CF0,30
+^FO50,40^FDClient Part Number^FS
+^FO500,40^FDProduct^FS
+
+^CF0,60
+^FO50,80^FD${clientPartNumber}^FS
+^FO490,80^FD${productValue}^FS
+
+^BY3,2,100
+^FO50,150^BCN,100,N,N,N^FD${clientPartNumber}^FS
+^FO490,150^BCN,100,N,N,N^FD${productValue}^FS
+
+^CF0,40
+^FO50,320^FDQuantity^FS
+^FO360,320^FDBatch - Order^FS
+
+^CF0,50
+^FO50,360^FD${quantity}^FS
+^FO360,360^FD${batchOrder}^FS
+
+^BY3,2,90
+^FO60,420^BCN,90,N,N,N^FD${quantity}^FS
+
+^BY3,2,120
+^FO310,420^BCN,80,N,N,N^FD${batchOrder}^FS
+
+^CF0,35
+^FO380,570^FDDate: ${dateLabel}^FS
+
+^FWB
+^FO820,1
+^GFA,5124,5124,28,,:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::P07FFK041FFCK0IF8,P07FF8K03FFEK0IF8,P0IFCK07FFCJ01IF,P0IFCJ087FFCJ01IF,P0IFEJ087FFCJ01IF,O01JFK07FFCJ03FFE,O01JFI010IF8J03FFE,O01JF800107FFK03FFE,O03JFCJ03F8K03FFC,O03JFC002O07FFC,O03JFE002O07FFC,O07JFE002O0IF8,P0KF004O0IF8,P0KF0043FFE0MF87LFC1MF,O08KF8043FFE1IF1IF07FFC7FFC1IF8,O087JFC087FFC3FFE1IF0IF87FFC3FFE,O083JFC087FFC3FFE1IF0IF87FFC3FFE,N0103JFE087FFC3FFE3FFE0IF8IF87FFC,N0101JFE00IF87FFC3FFE1IF0IF87FFC,N0101KF10IF87FFC3FFE1IF0IF87FFC,Q0KF90IF87FFC7FFC1IF1IF07FF8,N02007JFD1IF0IF87FFC3FFE1IF0IF8,N02007JFE1IF0IF87FFC3FFE1IF0IF8,N02003JFE1IF0IF87FFC3LFE0IF,N04003JFE3FFE1IF0IF87FFEJ01IF,N04001JFC3FFE1IF0IF87FFCJ01IF,N04001JFC3FFE1IF0IF87FFCJ01FFE,N08I0JFC7FFC3FFE1IF0IF8J03FFE,N08I07IF87FFC3FFE1IF0IF8J03FFE,N08I07IF87FFC3FFE1IF0IF8J03FFC,R03IF0IFC3FFC3FFE1IFK07FFC,M01J01IF0IF87FFC3FFE1IFK07FFC,M01J01IF0IF87FFC3FFE1IF8J07FFE,S0FFE0IF87FFEIFE1IFCJ07IF,S07FE0IF01LF80LFE01KFD8,,:::::::::gG09E03IF3F1F801F8,g011E07E3F3F1F803F,g013E07E7E3F3F807F,g027E07E7E7E3F807F,g067E0FC7E7E3F80FE,g04FE0FC007E3F80FE,g09BE0FC007C5F817E,Y0193E1F800FC5F807C,Y0123E1F800FC9F807C,Y0263E1F800FC1F80FC,Y0243E3F001F81F80FC,Y04C7E3F1F1F91F80F8,Y0CFFE3F3F1F91F81F8,Y0903E7E3F3F00FA1F8,X01303E7E3E3F20FC1F,Y0203E7FFE3F20FC1F,Y04,Y0C,,:::::::::::::::::::::::::::::::::::::::::::::::^FS
+^FWN
+
+^XZ
+`;
+
+    Print_Service.print(printer, zpl);
+  };
+
   const handleClose = () => {
     setOpen(false);
   };
@@ -413,14 +481,12 @@ export default function PrinterComponent({ barcodeProduct }) {
       </FormControl>
       <div className={classes.root}>
         <Button
-          onClick={handlePrintQRThermo}
-          className={
-            "w-64 h-12 rounded text-base flex justify-center hover:bg-green-500"
-          }
+          onClick={handlePrintZPLLabel}
+          className="w-64 h-12 rounded text-base flex justify-center hover:bg-green-500"
           variant="contained"
           disabled={!printer}
         >
-          Imprimir Etiqueta
+          Imprimir etiqueta
         </Button>
       </div>
       <div className={classes.root}></div>
