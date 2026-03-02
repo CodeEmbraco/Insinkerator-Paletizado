@@ -42,6 +42,8 @@ import {
   selectPallet,
   setComponents,
   setComponentsJoined,
+  getAllComponents,
+  setPallet,
   getLastPallet,
 } from "../store/slice/palletsSlice";
 import {
@@ -279,6 +281,8 @@ function PaletizationView() {
         };
         dispatch(addEventToPaletizationLog(codeScannedEvent));
         setIdAuto(id);
+        dispatch(getAllComponents(nuevoIdentificador));
+        dispatch(setPallet({ identifier: nuevoIdentificador, id }));
       })
       .catch((error) => {
         // Manejar cualquier error que pueda ocurrir

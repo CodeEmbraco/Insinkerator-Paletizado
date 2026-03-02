@@ -223,14 +223,14 @@ export const getLastPallet = () => {
   // };
   // dispatch(addEvent(startFetchOrders));
   return axios
-    .get('http://10.13.225.20:8004/api/v1/paletization/pallets/?workstation=MX8ST010')
+    .get('http://10.13.225.20:8002/api/v1/paletization/pallets/?workstation=MX8ST010')
     .then((response) => {
       if (response.status === 200) {
         //dispatch(setLoading(false));
         console.log("Último pallet");
         console.log(response.data);
         const objectResponse = response.data;
-        const id = objectResponse.id_auto + 1; // Suma uno al id
+        const id = objectResponse.id + 1; // Suma uno al id
         const nuevoIdentificador = "EIN" + id.toString().padStart(4, "0");
         return {nuevoIdentificador, id};
         // dispatch(setPallet(response.data));
@@ -256,12 +256,12 @@ export const createPallet =
           console.log("Pallet creado con éxito:", response.data);
 
           dispatch(setPallet(response.data));
+          const palletIdentifier = response.data.identifier;
+          dispatch(getAllComponents(palletIdentifier));
         } else if (response.status === 200) {
           console.log("Se encontró registro de Pallet:", response.data);
           dispatch(setPallet(response.data));
-          const palletIdentifier = response.data.identifier;
           console.log(palletIdentifier);
-          dispatch(getAllComponents(palletIdentifier));
         }
       })
       .catch((error) => endpointsCodes(error, dispatch, setNotFound));
