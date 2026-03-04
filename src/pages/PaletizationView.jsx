@@ -309,26 +309,37 @@ function PaletizationView() {
     setIsEditingPalletAmount(true);
   };
 
+  const validateAndApplyPalletAmount = (rawValue) => {
+    let parsedValue = Number(rawValue);
+
+    if (Number.isNaN(parsedValue) || parsedValue < 1) {
+      parsedValue = 1;
+    }
+
+    if (parsedValue < componentsList.length) {
+      notifyError(
+        "La cantidad por pallet no puede ser menor al total montados"
+      );
+      parsedValue = Math.max(componentsList.length, 1);
+    }
+
+    setEditablePalletAmount(parsedValue);
+    dispatch(setPalletAmount(parsedValue));
+  };
+
   const handlePalletAmountChange = (e) => {
     setEditablePalletAmount(e.target.value);
-    dispatch(setPalletAmount(e.target.value));
   };
 
   const handlePalletAmountBlur = () => {
     setIsEditingPalletAmount(false);
-    // You might want to validate the value here
-    if (editablePalletAmount < 1) {
-      setEditablePalletAmount(1);
-    }
+    validateAndApplyPalletAmount(editablePalletAmount);
   };
 
   const handlePalletAmountKeyPress = (e) => {
     if (e.key === "Enter") {
       setIsEditingPalletAmount(false);
-      // You might want to validate the value here
-      if (editablePalletAmount < 1) {
-        setEditablePalletAmount(1);
-      }
+      validateAndApplyPalletAmount(editablePalletAmount);
     }
   };
 
@@ -505,19 +516,21 @@ function PaletizationView() {
                         e.currentTarget.blur();
                       }}
                       className={
-                        // Si faltan componentes O ya están todos enviados a SAP, mostramos el estilo desactivado (gris/secundario)
-                        componentsList.length < editablePalletAmount ||
+                        // Si la cantidad del pallet no coincide con el total montado
+                        // O ya están todos enviados a SAP, mostramos el estilo desactivado (gris/secundario)
+                        componentsList.length !== Number(editablePalletAmount) ||
                         !componentsList.some(
-                          (component) => component.send_to_sap === false,
+                          (component) => component.send_to_sap === false
                         )
                           ? "w-64 h-12 bg-secondary rounded text-slate-400 text-base flex justify-center cursor-not-allowed opacity-70"
                           : "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
                       }
                       disabled={
-                        // El botón se bloquea si: Faltan componentes O NO hay nada pendiente por enviar a SAP
-                        componentsList.length < editablePalletAmount ||
+                        // El botón se bloquea si: la cantidad de pallet no coincide con el total montado
+                        // O NO hay nada pendiente por enviar a SAP
+                        componentsList.length !== Number(editablePalletAmount) ||
                         !componentsList.some(
-                          (component) => component.send_to_sap === false,
+                          (component) => component.send_to_sap === false
                         )
                       }
                     >
