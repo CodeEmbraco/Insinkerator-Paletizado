@@ -38,7 +38,13 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function PrinterComponent({ barcodeProduct }) {
+export default function PrinterComponent({
+  barcodeProduct,
+  product,
+  qty,
+  pallet,
+  order,
+}) {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const [deviceList, setDevices] = React.useState([]);
@@ -369,6 +375,63 @@ export default function PrinterComponent({ barcodeProduct }) {
     Print_Service.print(printer, networkCallResponse);
   };
 
+  const handlePrintZPLLabel = () => {
+    if (!printer) {
+      alert("Selecciona una impresora primero");
+      return;
+    }
+
+    const clientPartNumber = pallet || "";
+    const productValue = product || "";
+    const quantity = qty || "";
+    const batchOrder = pallet && order ? `${pallet}-${order}` : "";
+    const dateLabel = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+    });
+
+    const zpl = `
+^XA
+^PW1015
+^LL609
+^CI28
+
+^CF0,30
+^FO50,40^FDClient Part Number^FS
+^FO500,40^FDProduct^FS
+
+^CF0,60
+^FO50,80^FD${clientPartNumber}^FS
+^FO490,80^FD${productValue}^FS
+
+^BY3,2,100
+^FO50,150^BCN,100,N,N,N^FD${clientPartNumber}^FS
+^FO490,150^BCN,100,N,N,N^FD${productValue}^FS
+
+^CF0,40
+^FO50,320^FDQuantity^FS
+^FO360,320^FDBatch - Order^FS
+
+^CF0,50
+^FO50,360^FD${quantity}^FS
+^FO360,360^FD${batchOrder}^FS
+
+^BY3,2,90
+^FO60,420^BCN,90,N,N,N^FD${quantity}^FS
+
+^BY3,2,120
+^FO310,420^BCN,80,N,N,N^FD${batchOrder}^FS
+
+^CF0,35
+^FO380,570^FDDate: ${dateLabel}^FS
+
+^XZ
+`;
+
+    Print_Service.print(printer, zpl);
+  };
+
   const handleClose = () => {
     setOpen(false);
   };
@@ -413,14 +476,12 @@ export default function PrinterComponent({ barcodeProduct }) {
       </FormControl>
       <div className={classes.root}>
         <Button
-          onClick={handlePrintQRThermo}
-          className={
-            "w-64 h-12 rounded text-base flex justify-center hover:bg-green-500"
-          }
+          onClick={handlePrintZPLLabel}
+          className="w-64 h-12 rounded text-base flex justify-center hover:bg-green-500"
           variant="contained"
           disabled={!printer}
         >
-          Imprimir Etiqueta
+          Imprimir etiqueta
         </Button>
       </div>
       <div className={classes.root}></div>

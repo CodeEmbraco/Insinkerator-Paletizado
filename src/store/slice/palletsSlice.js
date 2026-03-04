@@ -214,14 +214,40 @@ export const getCompressor = (condenserSerial) => async (dispatch) => {
   }
 };
 
+
+export const getLastPallet = () => {
+  //dispatch(setLoading(true));
+  // const startFetchOrders = {
+  //   text: 'Obteniendo órdenes desde SAP',
+  //   timestamp: new Date().toISOString(),
+  // };
+  // dispatch(addEvent(startFetchOrders));
+  return axios
+    .get('http://10.13.225.20:8004/api/v1/paletization/pallets/?workstation=MX8ST010')
+    .then((response) => {
+      if (response.status === 200) {
+        //dispatch(setLoading(false));
+        console.log("Último pallet");
+        console.log(response.data);
+        const objectResponse = response.data;
+        const id = objectResponse.id_auto + 1; // Suma uno al id
+        const nuevoIdentificador = "EIN" + id.toString().padStart(4, "0");
+        return {nuevoIdentificador, id};
+        // dispatch(setPallet(response.data));
+      }
+    })
+    .catch((error) => endpointsCodes(error, dispatch, setNotFound));
+};
+
 export const createPallet =
-  (order, barcode, product, quantity) => (dispatch) => {
+  (order, barcode, product, quantity, idAuto) => (dispatch) => {
     const palletData = {
       workstation: "MX8ST010",
       order: order,
       identifier: barcode,
       product: product,
-      quantity: 0,
+      quantity: quantity,
+      id_auto: idAuto,
     };
     axios
       .post("http://10.13.225.20:8002/api/v1/paletization/pallets/", palletData)
