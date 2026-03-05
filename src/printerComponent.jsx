@@ -381,7 +381,15 @@ export default function PrinterComponent({
       return;
     }
 
-    const clientPartNumber = "81202A";
+    // Lo ideal es que esto sea dinámico y se obtenga desde una API o una base de datos. Esta es una solución temporal.
+    const parts_number_client_number = {
+      "5180758A": "81202A",
+      "5180759A": "81202A",
+      "5179611H": "81202K",
+      "5178830B": "81202K"
+    }
+
+    const clientPartNumber = parts_number_client_number[product.toString()] || "";
     const productValue = product || "";
     const quantity = qty || "";
     const batchOrder = pallet && order ? `${pallet}-${order}` : "";
