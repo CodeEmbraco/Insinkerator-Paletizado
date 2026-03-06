@@ -57,7 +57,7 @@ export default function PrinterComponent({
       },
       (err) => {
         console.log(err);
-      }
+      },
     );
   }, []);
 
@@ -97,7 +97,7 @@ export default function PrinterComponent({
     const selectedAccessoriesJson = JSON.parse(selectedAccessories);
     if (selectedAccessoriesJson == null)
       alert(
-        "No es posible generar etiqueta de Accesorios, el producto no tiene relacion"
+        "No es posible generar etiqueta de Accesorios, el producto no tiene relacion",
       );
     else {
       console.log(selectedAccessoriesJson[0].matnr);
@@ -172,7 +172,7 @@ export default function PrinterComponent({
     axios
       .post(
         "http://em10vs0010.embraco.com:8002/api/v1/paletization/thermo/get_qr/",
-        serialNo
+        serialNo,
       )
       .then((response) => {
         if (response.status === 201) {
@@ -199,7 +199,7 @@ export default function PrinterComponent({
     //const barcodeProduct_pp = useSelector(barcodeProduct);
     console.log({ barcodeProduct });
     let qr = "Hola";
-    let format_qr= qr;
+    let format_qr = qr;
     let v_serialNo = barcodeProduct.slice(9);
     console.log("serialNo", v_serialNo);
     //v_serialNo = "8C5XHIGH";
@@ -211,7 +211,7 @@ export default function PrinterComponent({
 
     const response = await axios.post(
       "http://em10vs0010.embraco.com:8002/api/v1/paletization/thermo/get_qr/",
-      serialNo
+      serialNo,
     );
     qr = JSON.stringify(response.data);
     console.log(qr);
@@ -225,22 +225,21 @@ export default function PrinterComponent({
 
     //qr = JSON.stringify(response.data);
 
-
     //format_qr = qr.translate(str.maketrans("", "", ',[]": '))
     //qr = '["Compressor1 PN: 513805037...L","Compressor1 SN: JC5BPOIL","Compressor2 PN: 513805037...L","Compressor2 SN: JC5BPOJF","Inverter PN: 519301201","Inverter SN: 2154","Inverter PN: 519301201","Inverter SN: 2160","Fan PN: 517009997","Fan SN: AN7","Cold Box PN: 15251677","Cold Box SN: 001201125","RE  PN: 215251070","RE  SN: 8C5VLGH1","Assembly PN: 515380100","Assembly SN: 8C5XHIGH","ExpansionHub PN: 519501008","ExpansionHub SN: 001D","Captube Back Pressure: 105.0","Captube Flow: 40.8","Captube Length: 919.0"]';
 
     let resultado = qr
-                    .replace(/[\[\]]/g, '')  // elimina [ y ]
-                    .replace(/"/g, ' ')      // reemplaza comillas
-                    .replace(/:/g, ',')      // reemplaza :
-                    .replace(/\s+/g, '');    // elimina espacios
+      .replace(/[\[\]]/g, "") // elimina [ y ]
+      .replace(/"/g, " ") // reemplaza comillas
+      .replace(/:/g, ",") // reemplaza :
+      .replace(/\s+/g, ""); // elimina espacios
 
     console.log(resultado);
 
-    format_qr = resultado
+    format_qr = resultado;
     //format_qr = "".join(format_qr.split())
 
-    print(format_qr)
+    print(format_qr);
     /*format_qr = qr.replace(",", "");  //Elimina las comas
     format_qr = format_qr.replace("[","");
     format_qr = format_qr.replace("]","");
@@ -248,8 +247,6 @@ export default function PrinterComponent({
     format_qr = format_qr.replace(":","");
     format_qr = format_qr.replace(" ","");*/
     console.log(format_qr);
-
-
 
     //if (response.status === 201) {
     //  console.log("QR Thermo obtenido con exito:", response.data);
@@ -386,10 +383,11 @@ export default function PrinterComponent({
       "5180758A": "81202A",
       "5180759A": "81202A",
       "5179611H": "81202K",
-      "5178830B": "81202K"
-    }
+      "5178830B": "81202K",
+    };
 
-    const clientPartNumber = parts_number_client_number[product.toString()] || "";
+    const clientPartNumber =
+      parts_number_client_number[product.toString()] || "";
     const productValue = product || "";
     const quantity = qty || "";
     const batchOrder = pallet && order ? `${pallet}-${order}` : "";
@@ -401,43 +399,42 @@ export default function PrinterComponent({
 
     const zpl = `
 ^XA
-^PW1015
-^LL609
+^PW680
+^LL1112
 ^CI28
+^FWB
+
+^FO60,100
+^GFA,5124,5124,28,,:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::P07FFK041FFCK0IF8,P07FF8K03FFEK0IF8,P0IFCK07FFCJ01IF,P0IFCJ087FFCJ01IF,P0IFEJ087FFCJ01IF,O01JFK07FFCJ03FFE,O01JFI010IF8J03FFE,O01JF800107FFK03FFE,O03JFCJ03F8K03FFC,O03JFC002O07FFC,O03JFE002O07FFC,O07JFE002O0IF8,P0KF004O0IF8,P0KF0043FFE0MF87LFC1MF,O08KF8043FFE1IF1IF07FFC7FFC1IF8,O087JFC087FFC3FFE1IF0IF87FFC3FFE,O083JFC087FFC3FFE1IF0IF87FFC3FFE,N0103JFE087FFC3FFE3FFE0IF8IF87FFC,N0101JFE00IF87FFC3FFE1IF0IF87FFC,N0101KF10IF87FFC3FFE1IF0IF87FFC,Q0KF90IF87FFC7FFC1IF1IF07FF8,N02007JFD1IF0IF87FFC3FFE1IF0IF8,N02007JFE1IF0IF87FFC3FFE1IF0IF8,N02003JFE1IF0IF87FFC3LFE0IF,N04003JFE3FFE1IF0IF87FFEJ01IF,N04001JFC3FFE1IF0IF87FFCJ01IF,N04001JFC3FFE1IF0IF87FFCJ01FFE,N08I0JFC7FFC3FFE1IF0IF8J03FFE,N08I07IF87FFC3FFE1IF0IF8J03FFE,N08I07IF87FFC3FFE1IF0IF8J03FFC,R03IF0IFC3FFC3FFE1IFK07FFC,M01J01IF0IF87FFC3FFE1IFK07FFC,M01J01IF0IF87FFC3FFE1IF8J07FFE,S0FFE0IF87FFEIFE1IFCJ07IF,S07FE0IF01LF80LFE01KFD8,,:::::::::gG09E03IF3F1F801F8,g011E07E3F3F1F803F,g013E07E7E3F3F807F,g027E07E7E7E3F807F,g067E0FC7E7E3F80FE,g04FE0FC007E3F80FE,g09BE0FC007C5F817E,Y0193E1F800FC5F807C,Y0123E1F800FC9F807C,Y0263E1F800FC1F80FC,Y0243E3F001F81F80FC,Y04C7E3F1F1F91F80F8,Y0CFFE3F3F1F91F81F8,Y0903E7E3F3F00FA1F8,X01303E7E3E3F20FC1F,Y0203E7FFE3F20FC1F,Y04,Y0C,,:::::::::::::::::::::::::::::::::::::::::::::::^FS
 
 ^CF0,30
-^FO50,40^FDClient Part Number^FS
-^FO500,40^FDProduct^FS
+^FO50,800^FDClient Part Number^FS
+^FO50,300^FDProduct^FS
 
 ^CF0,60
-^FO50,80^FD${clientPartNumber}^FS
-^FO490,80^FD${productValue}^FS
+^FO90,800^FD${clientPartNumber}^FS
+^FO90,300^FD${productValue}^FS
 
 ^BY3,2,100
-^FO50,150^BCN,100,N,N,N^FD${clientPartNumber}^FS
-^FO490,150^BCN,100,N,N,N^FD${productValue}^FS
+^FO160,800^BCB,100,N,N,N^FD${clientPartNumber}^FS
+^FO160,300^BCB,100,N,N,N^FD${productValue}^FS
 
 ^CF0,40
-^FO50,320^FDQuantity^FS
-^FO360,320^FDBatch - Order^FS
+^FO340,800^FDBatch Quantity^FS
+^FO340,150^FDBatch - Order^FS
 
 ^CF0,50
-^FO50,360^FD${quantity}^FS
-^FO360,360^FD${batchOrder}^FS
+^FO390,800^FD${quantity}^FS
+^FO390,150^FD${batchOrder}^FS
 
 ^BY3,2,90
-^FO60,420^BCN,90,N,N,N^FD${quantity}^FS
+^FO450,800^BCB,90,N,N,N^FD${quantity}^FS
 
-^BY3,2,120
-^FO310,420^BCN,80,N,N,N^FD${batchOrder}^FS
+^BY2,2,80
+^FO450,150^BCB,80,N,N,N^FD${batchOrder}^FS
 
 ^CF0,35
-^FO380,570^FDDate: ${dateLabel}^FS
-
-^FWB
-^FO820,1
-^GFA,5124,5124,28,,:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::P07FFK041FFCK0IF8,P07FF8K03FFEK0IF8,P0IFCK07FFCJ01IF,P0IFCJ087FFCJ01IF,P0IFEJ087FFCJ01IF,O01JFK07FFCJ03FFE,O01JFI010IF8J03FFE,O01JF800107FFK03FFE,O03JFCJ03F8K03FFC,O03JFC002O07FFC,O03JFE002O07FFC,O07JFE002O0IF8,P0KF004O0IF8,P0KF0043FFE0MF87LFC1MF,O08KF8043FFE1IF1IF07FFC7FFC1IF8,O087JFC087FFC3FFE1IF0IF87FFC3FFE,O083JFC087FFC3FFE1IF0IF87FFC3FFE,N0103JFE087FFC3FFE3FFE0IF8IF87FFC,N0101JFE00IF87FFC3FFE1IF0IF87FFC,N0101KF10IF87FFC3FFE1IF0IF87FFC,Q0KF90IF87FFC7FFC1IF1IF07FF8,N02007JFD1IF0IF87FFC3FFE1IF0IF8,N02007JFE1IF0IF87FFC3FFE1IF0IF8,N02003JFE1IF0IF87FFC3LFE0IF,N04003JFE3FFE1IF0IF87FFEJ01IF,N04001JFC3FFE1IF0IF87FFCJ01IF,N04001JFC3FFE1IF0IF87FFCJ01FFE,N08I0JFC7FFC3FFE1IF0IF8J03FFE,N08I07IF87FFC3FFE1IF0IF8J03FFE,N08I07IF87FFC3FFE1IF0IF8J03FFC,R03IF0IFC3FFC3FFE1IFK07FFC,M01J01IF0IF87FFC3FFE1IFK07FFC,M01J01IF0IF87FFC3FFE1IF8J07FFE,S0FFE0IF87FFEIFE1IFCJ07IF,S07FE0IF01LF80LFE01KFD8,,:::::::::gG09E03IF3F1F801F8,g011E07E3F3F1F803F,g013E07E7E3F3F807F,g027E07E7E7E3F807F,g067E0FC7E7E3F80FE,g04FE0FC007E3F80FE,g09BE0FC007C5F817E,Y0193E1F800FC5F807C,Y0123E1F800FC9F807C,Y0263E1F800FC1F80FC,Y0243E3F001F81F80FC,Y04C7E3F1F1F91F80F8,Y0CFFE3F3F1F91F81F8,Y0903E7E3F3F00FA1F8,X01303E7E3E3F20FC1F,Y0203E7FFE3F20FC1F,Y04,Y0C,,:::::::::::::::::::::::::::::::::::::::::::::::^FS
-^FWN
+^FO580,500^FDDate: ${dateLabel}^FS
 
 ^XZ
 `;
