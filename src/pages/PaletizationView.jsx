@@ -202,6 +202,27 @@ function PaletizationView() {
     },
   });
 
+  function handleCreatePallet() {
+    dispatch(
+      createPallet(
+        orderSelected.aufnr,
+        barcodePallet,
+        orderSelected.matnr.slice(-9),
+        metadata.find((obj) => obj.ID_CARACTMATERIAL === 185)
+          ?.DE_VALORCARACTMAT,
+        idAuto,
+      ),
+    );
+
+    const createPalletEvent = {
+      text: "Creando registro de Pallet: " + barcodePallet,
+      timestamp: new Date().toISOString(),
+    };
+    notifyPalletScanned(barcodePallet);
+
+    dispatch(addEventToPaletizationLog(createPalletEvent));
+  }
+
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   function formatTimestampToDDMMYYYYHHMMSS(timestamp) {
@@ -290,9 +311,14 @@ function PaletizationView() {
         };
         dispatch(addEventToPaletizationLog(codeScannedEvent));
         setIdAuto(id);
+        try { 
+          handleCreatePallet();
+        } catch (error) {
+          console.error("Hubo un error al crear el pallet:", error);
+        }
+        
       })
       .catch((error) => {
-        // Manejar cualquier error que pueda ocurrir
         console.error("Hubo un error:", error);
       });
   }
