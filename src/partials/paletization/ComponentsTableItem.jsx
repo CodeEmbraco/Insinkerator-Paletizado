@@ -15,9 +15,17 @@ function ComponentsItem(props) {
   const palletSelected = useSelector(selectPallet);
 
   const handleUnmount = () => {
-    // Llama a la acción para eliminar el componente por su id
-    dispatch(unmountComponentAPI(palletSelected.identifier, props));
-    //dispatch(unmountComponent(props));
+    const palletIdentifier =
+      props.palletIdentifier || palletSelected?.identifier;
+
+    if (!palletIdentifier) {
+      console.error(
+        "No se puede desmontar el componente porque el palletIdentifier es undefined o vacío."
+      );
+      return;
+    }
+
+    dispatch(unmountComponentAPI(palletIdentifier, props));
   };
 
   return (

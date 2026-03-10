@@ -10,7 +10,7 @@ import { selectComponents, selectPallet } from "../../store/slice/palletsSlice";
 
 import ComponentsItem from "./ComponentsTableItem";
 
-function ComponentsTable({ selectedItems }) {
+function ComponentsTable({ selectedItems, palletIdentifier }) {
   const orders = [
     {
       id: "0",
@@ -104,8 +104,8 @@ function ComponentsTable({ selectedItems }) {
           </span>
         </h2>
         <p className="text-left font-medium text-gray">
-          {palletSelected.identifier
-            ? `Pallet: ${palletSelected.identifier}`
+          {palletIdentifier || palletSelected.identifier
+            ? `Pallet: ${palletIdentifier || palletSelected.identifier}`
             : "No se ha seleccionado un pallet"}
         </p>
       </header>
@@ -147,7 +147,7 @@ function ComponentsTable({ selectedItems }) {
             <tbody className="text-sm divide-y divide-slate-200">
               {Array.isArray(componentsList) && componentsList.length > 0
                 ? componentsList.map((component, index) => {
-                  const rowNumber = index + 1;
+                    const rowNumber = index + 1;
                     return (
                       <ComponentsItem
                         key={component.id}
@@ -160,8 +160,7 @@ function ComponentsTable({ selectedItems }) {
                         sendToSAP={component.send_to_sap}
                         sapStatus={component.sap_status}
                         materialType={component.material_type}
-
-                        
+                        palletIdentifier={palletIdentifier || palletSelected.identifier}
                       />
                     );
                   })

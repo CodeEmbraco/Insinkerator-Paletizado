@@ -43,6 +43,7 @@ import {
   setComponents,
   setComponentsJoined,
   getLastPallet,
+  setPallet,
 } from "../store/slice/palletsSlice";
 import {
   getTestResults,
@@ -92,6 +93,7 @@ function PaletizationView() {
   const [editablePalletAmount, setEditablePalletAmount] = useState(280);
 
   const [barcodePallet, setBarcodePallet] = useState("Nuevo pallet");
+  const [palletIntermedio, setPalletIntermedio] = useState(null);
   const [idAuto, setIdAuto] = useState(1);
   const [barcodeProduct, setBarcodeProduct] = useState("Escanea producto");
   const labelRef = useRef();
@@ -162,7 +164,9 @@ function PaletizationView() {
           text: "Pallet escaneado: " + code.replace(/Shift/g, "").toUpperCase(),
           timestamp: new Date().toISOString(),
         };
-        setBarcodePallet(code.replace(/Shift/g, "").toUpperCase());
+        const palletCode = code.replace(/Shift/g, "").toUpperCase();
+        setBarcodePallet(palletCode);
+        setPalletIntermedio(palletCode);
         dispatch(addEventToPaletizationLog(codeScannedEvent));
         console.log("HDR Toy escaneando pallet2");
         if (
@@ -273,6 +277,13 @@ function PaletizationView() {
         // Hacer algo con el nuevo identificador recibido
         console.log("El nuevo identificador es:", nuevoIdentificador);
         setBarcodePallet(nuevoIdentificador);
+        setPalletIntermedio(nuevoIdentificador);
+        dispatch(
+          setPallet({
+            identifier: nuevoIdentificador,
+            id: id,
+          })
+        );
         const codeScannedEvent = {
           text: "Nuevo pallet: " + nuevoIdentificador,
           timestamp: new Date().toISOString(),
@@ -290,6 +301,7 @@ function PaletizationView() {
     console.log("Handle new step");
     setBarcodePallet("Nuevo pallet");
     setBarcodeProduct("Escanea producto");
+    setPalletIntermedio(null);
     dispatch(setGlobalStatus(""));
     dispatch(setTestResults([]));
     dispatch(setComponentsJoined(false));
@@ -746,11 +758,15 @@ function PaletizationView() {
                   <h3 className="bg-white text-md font-medium text-gray">
                     Listado de componentes
                   </h3>
-                  <div
-                    className="flex justify-start"
-                    style={{ marginLeft: "-10px" }}
-                  >
-                    <ComponentsTable selectedItems={handleSelectedItems} />
+                  <div className="flex justify-start" style={{ marginLeft: "-10px" }}>
+                    <ComponentsTable
+                      selectedItems={handleSelectedItems}
+                      palletIdentifier={
+                        palletIntermedio ||
+                        palletSelected?.identifier ||
+                        (barcodePallet !== "Nuevo pallet" ? barcodePallet : undefined)
+                      }
+                    />
                     <div></div>
                   </div>
                 </div>
