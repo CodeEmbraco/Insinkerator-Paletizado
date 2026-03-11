@@ -8,15 +8,13 @@ import {
   Health,
   Notepad2,
 } from "iconsax-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import BrowserPrintComponent from "../printerComponent";
 
 import Stepper from "@keyvaluesystems/react-vertical-stepper";
 import { Barcode } from "iconsax-react";
 
 import useScanDetection from "use-scan-detection";
-
-import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ReactToPrint from "react-to-print";
 import LabelPrinting from "../partials/genealogy/LabelPrinting";
@@ -98,6 +96,7 @@ function PaletizationView() {
   const [idAuto, setIdAuto] = useState(1);
   const [barcodeProduct, setBarcodeProduct] = useState("Escanea producto");
   const labelRef = useRef();
+  const componentsSectionRef = useRef(null);
 
   const dispatch = useDispatch();
 
@@ -202,6 +201,17 @@ function PaletizationView() {
       }
     },
   });
+
+  useEffect(() => {
+    if (
+      componentsSectionRef.current &&
+      Array.isArray(componentsList) &&
+      componentsList.length > 0
+    ) {
+      const container = componentsSectionRef.current;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [componentsList]);
 
   function handleCreatePallet(palletIdentifier) {
     dispatch(
@@ -778,6 +788,7 @@ function PaletizationView() {
               </div>
 
               <section
+                ref={componentsSectionRef}
                 style={{
                   maxHeight: "645px",
                   minHeight: "200px",
