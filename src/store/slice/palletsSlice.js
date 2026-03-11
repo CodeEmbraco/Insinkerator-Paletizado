@@ -247,7 +247,7 @@ export const createPallet =
       order: order,
       identifier: barcode,
       product: product,
-      quantity: quantity,
+      quantity: 0, // El pallet se crea con 0 componentes, el sistema va sumando 1 y restando 1 si se monta o desmonta
       id_auto: idAuto,
     };
     axios
