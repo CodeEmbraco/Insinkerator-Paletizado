@@ -557,22 +557,27 @@ function PaletizationView() {
                         e.currentTarget.blur();
                       }}
                       className={
-                        // Si la cantidad del pallet no coincide con el total montado
-                        // O ya están todos enviados a SAP, mostramos el estilo desactivado (gris/secundario)
+                        // Si la cantidad del pallet no coincide con el total montado,
+                        // O ya están todos enviados a SAP,
+                        // O el pallet ya fue notificado exitosamente en SAP (sap_success === true),
+                        // mostramos el estilo desactivado (gris/secundario)
                         componentsList.length !== Number(editablePalletAmount) ||
                         !componentsList.some(
                           (component) => component.send_to_sap === false
-                        )
+                        ) ||
+                        palletSelected?.sap_success
                           ? "w-64 h-12 bg-secondary rounded text-slate-400 text-base flex justify-center cursor-not-allowed opacity-70"
                           : "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
                       }
                       disabled={
                         // El botón se bloquea si: la cantidad de pallet no coincide con el total montado
                         // O NO hay nada pendiente por enviar a SAP
+                        // O el pallet ya fue procesado exitosamente en SAP
                         componentsList.length !== Number(editablePalletAmount) ||
                         !componentsList.some(
                           (component) => component.send_to_sap === false
-                        )
+                        ) ||
+                        palletSelected?.sap_success
                       }
                     >
                       <span className="bg-transparent my-auto text-white font-semibold">
