@@ -44,6 +44,7 @@ import {
   setComponentsJoined,
   getLastPallet,
   setPallet,
+  getAllComponents,
 } from "../store/slice/palletsSlice";
 import {
   getTestResults,
@@ -114,6 +115,7 @@ function PaletizationView() {
 
   useScanDetection({
     onComplete: async (code) => {
+      const currentScrollY = window.scrollY;
       console.log(code);
 
       const formattedCode = code.replace(/Shift/g, "");
@@ -185,8 +187,7 @@ function PaletizationView() {
             orderSelected.aufnr,
             code.replace(/Shift/g, "").toUpperCase(),
             orderSelected.matnr.slice(-9),
-            metadata.find((obj) => obj.ID_CARACTMATERIAL === 185)
-              ?.DE_VALORCARACTMAT,
+            editablePalletAmount,
             idAuto,
           ),
         );
@@ -195,10 +196,13 @@ function PaletizationView() {
           text: "Creando registro de Pallet: " + idAuto,
           timestamp: new Date().toISOString(),
         };
-        notifyPalletScanned(idAuto);
+        notifyPalletScanned(palletCode);
+        dispatch(getAllComponents(palletCode));
 
         dispatch(addEventToPaletizationLog(createPalletEvent));
       }
+
+      window.scrollTo({ top: currentScrollY, behavior: "auto" });
     },
   });
 
@@ -208,8 +212,7 @@ function PaletizationView() {
         orderSelected.aufnr,
         palletIdentifier,
         orderSelected.matnr.slice(-9),
-        metadata.find((obj) => obj.ID_CARACTMATERIAL === 185)
-          ?.DE_VALORCARACTMAT,
+        editablePalletAmount,
         idAuto,
       ),
     );
