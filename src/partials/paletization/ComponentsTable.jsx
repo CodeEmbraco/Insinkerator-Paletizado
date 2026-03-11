@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 
 import {
@@ -58,6 +58,8 @@ function ComponentsTable({ selectedItems, palletIdentifier }) {
 
   const componentsList = useSelector(selectComponents);
 
+  const tableEndRef = useRef(null);
+
   useEffect(() => {
     setList(componentsList);
   }, []);
@@ -93,6 +95,12 @@ function ComponentsTable({ selectedItems, palletIdentifier }) {
     selectedItems(isCheck);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCheck]);
+
+  useEffect(() => {
+    if (tableEndRef.current && Array.isArray(componentsList) && componentsList.length > 0) {
+      tableEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [componentsList]);
 
   return (
     <div className="bg-whiterounded-sm relative w-full">
@@ -167,6 +175,7 @@ function ComponentsTable({ selectedItems, palletIdentifier }) {
                 : ""}
             </tbody>
           </table>
+          <div ref={tableEndRef} />
         </div>
       </div>
     </div>

@@ -115,7 +115,6 @@ function PaletizationView() {
 
   useScanDetection({
     onComplete: async (code) => {
-      const currentScrollY = window.scrollY;
       console.log(code);
 
       const formattedCode = code.replace(/Shift/g, "");
@@ -201,8 +200,6 @@ function PaletizationView() {
 
         dispatch(addEventToPaletizationLog(createPalletEvent));
       }
-
-      window.scrollTo({ top: currentScrollY, behavior: "auto" });
     },
   });
 
