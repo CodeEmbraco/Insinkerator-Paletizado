@@ -104,8 +104,8 @@ function ComponentsTable({ selectedItems, palletIdentifier }) {
           </span>
         </h2>
         <p className="text-left font-medium text-gray">
-          {palletIdentifier || palletSelected.identifier
-            ? `Pallet: ${palletIdentifier || palletSelected.identifier}`
+          {palletIdentifier || palletSelected?.identifier
+            ? `Pallet: ${palletIdentifier || palletSelected?.identifier}`
             : "No se ha seleccionado un pallet"}
         </p>
       </header>
@@ -160,7 +160,9 @@ function ComponentsTable({ selectedItems, palletIdentifier }) {
                         sendToSAP={component.send_to_sap}
                         sapStatus={component.sap_status}
                         materialType={component.material_type}
-                        palletIdentifier={palletIdentifier || palletSelected.identifier}
+                        palletIdentifier={
+                          palletIdentifier || palletSelected?.identifier
+                        }
                       />
                     );
                   })

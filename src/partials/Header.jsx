@@ -5,7 +5,16 @@ import UserMenu from "../components/DropdownProfile";
 import { Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
-import { Add, Barcode, BoxSearch, Grid2, Grid8, Note, Notepad2 } from "iconsax-react";
+import {
+  Add,
+  Barcode,
+  BoxSearch,
+  Grid2,
+  Grid8,
+  Note,
+  Notepad2,
+  Play,
+} from "iconsax-react";
 
 import { selectOpenOrdersList, getOpenOrdersList } from "../store/slice/ordersSlice";
 
@@ -17,10 +26,13 @@ function Header({
   nameSubRoute,
   basicModalOpen,
   setBasicModalOpen,
+  onOpenContinuePallet,
 }) {
   const dispatch = useDispatch();
   const rol = sessionStorage.getItem("rol");
   const openOrdersList = useSelector(selectOpenOrdersList);
+
+  const location = useLocation();
 
   const handleClick = (e) => {
     console.log("Open orders list");
@@ -52,7 +64,6 @@ function Header({
             />
             <div className="bg-black flex flex-grow justify-between">
               <div className="flex bg-black my-auto">
-
                 <Link
                   to="/paletization"
                   className={`flex bg-black hover:text-hoverTextSidebar transition duration-500 easy-in-out ${location.pathname === '/paletization' ? 'text-hoverTextSidebar' : 'text-white'} font-semibold lg:mr-7`}
@@ -77,6 +88,22 @@ function Header({
                     Órdenes
                   </a>
                 </button>
+                {location.pathname === "/paletization" && onOpenContinuePallet && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenContinuePallet();
+                    }}
+                    className="flex bg-black hover:text-hoverTextSidebar transition duration-500 easy-in-out text-white font-semibold lg:mr-7"
+                  >
+                    <Play
+                      className="bg-black mr-2"
+                      color="#ffff"
+                      size={24}
+                    />
+                    Continuar pallet
+                  </button>
+                )}
                 <Link
                  to="/logs"
                  className={`flex bg-black hover:text-hoverTextSidebar transition duration-500 easy-in-out ${location.pathname === '/logs' ? 'text-hoverTextSidebar' : 'text-white'} font-semibold lg:mr-7`}

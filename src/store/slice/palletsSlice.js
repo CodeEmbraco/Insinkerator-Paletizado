@@ -19,6 +19,7 @@ const initialState = {
   componentsJoined: false,
   genealogyData: {},
   loadingProcessInSap: false,
+  logsLoading: false,
   componentsCount: 0,
   componentsInOrderList: [],
   logs: [],
@@ -57,6 +58,9 @@ const palletsSlice = createSlice({
   name: "pallets",
   extraReducers: (builder) => {},
   reducers: {
+    setLogs: (state, action) => {
+      state.logs = action.payload;
+    },
     setPallet: (state, action) => {
       state.pallet = action.payload;
     },
@@ -90,10 +94,14 @@ const palletsSlice = createSlice({
     setChartDataOrderProgress: (state, action) => {
       state.chartDataOrderProgress = action.payload;
     },
+    setLogsLoading: (state, action) => {
+      state.logsLoading = action.payload;
+    },
   },
 });
 
 export const {
+  setLogs,
   setPallet,
   setComponents,
   unmountComponent,
@@ -103,6 +111,7 @@ export const {
   setComponentsCount,
   setComponentsInOrderList,
   setChartDataOrderProgress,
+  setLogsLoading,
 } = palletsSlice.actions;
 
 export const selectPallet = (state) => state.pallets.pallet;
@@ -115,6 +124,8 @@ export const selectGenealogyData = (state) => state.pallets.genealogyData;
 
 export const selectLoadingProcessInSap = (state) =>
   state.pallets.loadingProcessInSap;
+
+export const selectLogsLoading = (state) => state.pallets.logsLoading;
 
 export const selectComponentsCount = (state) => state.pallets.componentsCount;
 
@@ -350,7 +361,7 @@ export const unmountComponentAPI =
   };
 
 export const getLogs = () => (dispatch) => {
-  //dispatch(setLoading(true));
+  dispatch(setLogsLoading(true));
   // const startFetchOrders = {
   //   text: 'Obteniendo órdenes desde SAP',
   //   timestamp: new Date().toISOString(),
@@ -362,15 +373,37 @@ export const getLogs = () => (dispatch) => {
     )
     .then((response) => {
       if (response.status === 200) {
-        //dispatch(setLoading(false));
         console.log(response.data);
         console.log("Si cargaron los logs jeje");
         dispatch(setLogs(response.data));
-        //console.log(response.data.global_status);
-        //dispatch(setGlobalStatus(response.data.global_status));
       }
     })
-    .catch((error) => endpointsCodes(error, dispatch, setNotFound));
+    .catch((error) => {
+      endpointsCodes(error, dispatch, setNotFound);
+    })
+    .finally(() => {
+      dispatch(setLogsLoading(false));
+    });
+};
+
+export const getLogsByUrl = (url) => (dispatch) => {
+  if (!url) {
+    return;
+  }
+  dispatch(setLogsLoading(true));
+  axios
+    .get(url)
+    .then((response) => {
+      if (response.status === 200) {
+        dispatch(setLogs(response.data));
+      }
+    })
+    .catch((error) => {
+      endpointsCodes(error, dispatch, setNotFound);
+    })
+    .finally(() => {
+      dispatch(setLogsLoading(false));
+    });
 };
 
 export const reprocessPallet = (palletIdentifier) => (dispatch) => {

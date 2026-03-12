@@ -180,6 +180,7 @@ function PaletizationView() {
           return;
         }
         console.log("HDR Toy escaneando pallet3 antes de create");
+        // Probablemente debamos borrar esto y solo llamar a getAllComponents
         dispatch(
           createPallet(
             orderSelected.aufnr,
@@ -335,9 +336,11 @@ function PaletizationView() {
 
   function handleNew() {
     console.log("Handle new step");
+    dispatch(setPallet(null));
     setBarcodePallet("Nuevo pallet");
     setBarcodeProduct("Escanea producto");
     setPalletIntermedio(null);
+   
     dispatch(setGlobalStatus(""));
     dispatch(setTestResults([]));
     dispatch(setComponentsJoined(false));
@@ -458,6 +461,18 @@ function PaletizationView() {
       </div>
     );
   };
+
+  useEffect(() => {
+    // Checkear si el pallet seleccionado es null
+    if (palletSelected === null) {
+      setBarcodePallet("Nuevo pallet");
+      setPalletIntermedio(null);
+    }
+    if (palletSelected?.identifier) {
+      setBarcodePallet(palletSelected.identifier);
+      setPalletIntermedio(palletSelected.identifier);
+    }
+  }, [palletSelected, barcodePallet]);
 
   return (
     <>
@@ -596,6 +611,14 @@ function PaletizationView() {
               </div>
             </div>
           </header>
+          {/* Mostrar un alert si el pallet ya fue notificado en SAP */}
+          {palletSelected?.sap_success ? (
+            <div className="mt-2 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">Este pallet ya fue procesado. Haz click en el botón "Nuevo" para crear un nuevo pallet o "Continuar pallet" para reanudar el proceso en otro pallet.</span>
+            </div>
+          ) : (
+            null
+          )}
 
           <div className="max-w-full mx-4 py-0 sm:mx-auto">
             <div className="sm:flex sm:space-x-4">
