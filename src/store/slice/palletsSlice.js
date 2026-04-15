@@ -234,7 +234,7 @@ export const getLastPallet = () => {
   // };
   // dispatch(addEvent(startFetchOrders));
   return axios
-    .get('http://10.13.225.20:8002/api/v1/paletization/pallets/?workstation=MX8ST010')
+    .get('http://10.13.225.20:8002/api/v1/paletization/pallets/?workstation=MX8ST040')
     .then((response) => {
       if (response.status === 200) {
         //dispatch(setLoading(false));
@@ -254,7 +254,7 @@ export const getLastPallet = () => {
 export const createPallet =
   (order, barcode, product, quantity, idAuto) => (dispatch) => {
     const palletData = {
-      workstation: "MX8ST010",
+      workstation: "MX8ST040",
       order: order,
       identifier: barcode,
       product: product,
@@ -369,7 +369,7 @@ export const getLogs = () => (dispatch) => {
   // dispatch(addEvent(startFetchOrders));
   axios
     .get(
-      `http://10.13.225.20:8002/api/v1/paletization/logs/?workstation=MX8ST010&page=1&page_size=10`
+      `http://10.13.225.20:8002/api/v1/paletization/logs/?workstation=MX8ST040&page=1&page_size=10`
     )
     .then((response) => {
       if (response.status === 200) {
@@ -406,10 +406,11 @@ export const getLogsByUrl = (url) => (dispatch) => {
     });
 };
 
-export const reprocessPallet = (palletIdentifier) => (dispatch) => {
+export const reprocessPallet = (palletIdentifier, qty) => (dispatch) => {
   // Realiza una solicitud DELETE para desmontar el componente
   const data = {
     pallet: palletIdentifier,
+    qty: qty
   };
   axios
     .post(`http://10.13.225.20:8002/api/v1/paletization/reprocess/`, data)
@@ -466,7 +467,7 @@ export const processInSAP =
       }));
 
     const xmlData = {
-      IArbpl: "MX8ST010",
+      IArbpl: "MX8ST040",
       IAufnr: orderSelected.aufnr,
       IMatnrDestino: orderSelected.matnr.slice(-9),
       ICharg: pallet.identifier,

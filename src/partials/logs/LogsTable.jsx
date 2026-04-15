@@ -27,7 +27,7 @@ function LogsTable() {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    fetchPallets("&workstation=MX8ST010");
+    fetchPallets("&workstation=MX8ST040");
   }, [currentPage]);
 
   const fetchPallets = async (queryParams) => {
@@ -61,9 +61,9 @@ function LogsTable() {
     setCurrentPage(1);
     // Hacer la solicitud a la API con los parámetros de filtro
     if(sapSuccess === "none" || sapSuccess === "all") {
-      fetchPallets(`&workstation=MX8ST010`);
+      fetchPallets(`&workstation=MX8ST040`);
     } else {
-      fetchPallets(`&workstation=MX8ST010&sap_success=${sapSuccess}`);
+      fetchPallets(`&workstation=MX8ST040&sap_success=${sapSuccess}`);
     }
   };
   const orders = [
@@ -213,9 +213,6 @@ function LogsTable() {
                     Serial (Compresor)
                   </div>
                 </th> */}
-                <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
-                  <div className="font-semibold text-center">Cantidad esperada</div>
-                </th>
                 <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
                   <div className="font-semibold text-center">Cantidad montada</div>
                 </th>

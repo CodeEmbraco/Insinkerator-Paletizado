@@ -20,7 +20,7 @@ function LogsItem(props) {
   const handleDispatch = async () => {
     setIsloading(true);
     try {
-      await dispatch(reprocessPallet(props.identifier));
+      await dispatch(reprocessPallet(props.identifier, props.mounted_components_count));
     } catch (error) {
       // Maneja los errores aquí si es necesario
       console.log("Error al reprocesar el lote: " + error);
@@ -33,7 +33,7 @@ function LogsItem(props) {
     setIsloading(true);
     handleDispatch();
     setTimeout(() => {
-      props.fetchPallets('&workstation=MX8ST010');
+      props.fetchPallets('&workstation=MX8ST040');
     }, 5000);
    
     //dispatch(unmountComponent(props));
@@ -94,11 +94,6 @@ function LogsItem(props) {
         <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
           <div className="text-center text-md font-medium">
             {props.order}
-          </div>
-        </td>
-        <td className="px-2 first:pl-5 last:pr-5 py-6 whitespace-nowrap">
-          <div className="text-center text-md font-medium">
-            {props.quantity}
           </div>
         </td>
         <td className="px-2 first:pl-5 last:pr-5 py-6 whitespace-nowrap">

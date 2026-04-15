@@ -113,6 +113,7 @@ function PaletizationView() {
   };
 
   useScanDetection({
+    preventDefault: true,
     onComplete: async (code) => {
       console.log(code);
 
@@ -202,17 +203,6 @@ function PaletizationView() {
       }
     },
   });
-
-  useEffect(() => {
-    if (
-      componentsSectionRef.current &&
-      Array.isArray(componentsList) &&
-      componentsList.length > 0
-    ) {
-      const container = componentsSectionRef.current;
-      container.scrollTop = container.scrollHeight;
-    }
-  }, [componentsList]);
 
   function handleCreatePallet(palletIdentifier) {
     dispatch(
