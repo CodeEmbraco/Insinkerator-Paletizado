@@ -406,43 +406,29 @@ export const getLogsByUrl = (url) => (dispatch) => {
     });
 };
 
-export const reprocessPallet = (palletIdentifier, qty) => (dispatch) => {
-  // Realiza una solicitud DELETE para desmontar el componente
+export const reprocessPallet = (palletIdentifier, qty) => async (dispatch) => {
   const data = {
     pallet: palletIdentifier,
-    qty: qty
+    qty: qty,
   };
-  axios
-    .post(`http://10.13.225.20:8002/api/v1/paletization/reprocess/`, data)
-    .then((response) => {
-      if (response.status === 200) {
-        dispatch(setLoadingProcessInSap(false));
-        console.log(response.data);
-        if (
-          response.data.EMessage ===
-          "Process Notification executed successfully"
-        ) {
-          console.log("Notificación exitosa");
-          notifySuccesInSAP(xmlData.ICharg, response.data.EMessage);
-          const palletHasBeenNotified = {
-            text: "Pallet notificado: " + xmlData.ICharg,
-            timestamp: new Date().toISOString(),
-          };
-          dispatch(addEventToPaletizationLog(palletHasBeenNotified));
-          dispatch(setPalletNotified({ ICharg: xmlData.ICharg }));
-          dispatch(getOrderDetail(orderSelected.aufnr));
-        } else {
-          dispatch(setLoadingProcessInSap(false));
-          console.log("Error!");
-          console.log(response.data.EMessage);
-          notifyErrorInSAP(xmlData.ICharg, response.data.EMessage);
-        }
+  try {
+    const response = await axios.post(
+      `http://10.13.225.20:8002/api/v1/paletization/reprocess/`,
+      data
+    );
+    if (response.status === 200) {
+      if (
+        response.data.EMessage === "Process Notification executed successfully"
+      ) {
+        notifySuccesInSAP(palletIdentifier, response.data.EMessage);
+      } else {
+        notifyErrorInSAP(palletIdentifier, response.data.EMessage);
       }
-    })
-    .catch((error) => {
-      // Maneja los errores, como lo hiciste anteriormente
-      endpointsCodes(error, dispatch, setNotFound);
-    });
+    }
+  } catch (error) {
+    notifyErrorInSAP(palletIdentifier, error.message);
+    endpointsCodes(error, dispatch, setNotFound);
+  }
 };
 
 export const processInSAP =
@@ -458,12 +444,13 @@ export const processInSAP =
       .map((component) => ({
         // Sernr ejemplo: 26011208145580578A 0100490
         // Tomaremos los ultimos 8, quitandole el espacio. Resultado final: A0100490
-        sernr: component.condenser_unit_serial.slice(-9).replace(" ", ""),
-        serfi: component.condenser_unit_serial.slice(-9).replace(" ", ""),
-        matnr: component.condenser_material_code,
-        matfi: component.compressor_material_code,
-        tipo: "S",
-        full_serial: component.condenser_unit_serial,
+        sernr: component.condenser_unit_serial.replace(/\s+/g, "").slice(-18),
+        //serfi: component.condenser_unit_serial.slice(-9).replace(" ", ""),
+        matnr: orderSelected.matnr.slice(-9),
+        //matfi: component.compressor_material_code,
+        //tipo: "S", // Temporalmente deshabilitado.
+        // Sernr ejemplo: 26042008432380758A 100284
+        full_serial: component.condenser_unit_serial.replace(/\s+/g, "").slice(-18),
       }));
 
     const xmlData = {

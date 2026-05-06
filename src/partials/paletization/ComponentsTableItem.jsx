@@ -50,7 +50,7 @@ function ComponentsItem(props) {
             {props.condUnitSerial}
           </div>
         </td>
-        <td className="px-2 first:pl-5 last:pr-5 py-6 whitespace-nowrap">
+        {/* <td className="px-2 first:pl-5 last:pr-5 py-6 whitespace-nowrap">
           <div className="text-left text-md font-medium text-gray">
             {props.compMaterialCode}
           </div>
@@ -73,7 +73,7 @@ function ComponentsItem(props) {
               </div>
             )}
           </div>
-        </td>
+        </td> */}
         <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
           {/* Menu button */}
           {props.sendToSAP ? null : (

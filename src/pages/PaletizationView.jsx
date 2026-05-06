@@ -101,6 +101,7 @@ function PaletizationView() {
   const dispatch = useDispatch();
 
   const [selectedItems, setSelectedItems] = useState([]);
+  const [hasProcessed, setHasProcessed] = useState(false);
 
   const palletSelected = useSelector(selectPallet);
 
@@ -113,7 +114,7 @@ function PaletizationView() {
   };
 
   useScanDetection({
-    preventDefault: true,
+    preventDefault: !isEditingPalletAmount,
     onComplete: async (code) => {
       console.log(code);
 
@@ -330,7 +331,8 @@ function PaletizationView() {
     setBarcodePallet("Nuevo pallet");
     setBarcodeProduct("Escanea producto");
     setPalletIntermedio(null);
-   
+    setHasProcessed(false);
+
     dispatch(setGlobalStatus(""));
     dispatch(setTestResults([]));
     dispatch(setComponentsJoined(false));
@@ -343,6 +345,7 @@ function PaletizationView() {
   }
 
   function handleNotify() {
+    setHasProcessed(true);
     dispatch(processInSAP(orderSelected, palletSelected, componentsList));
   }
 
@@ -572,7 +575,9 @@ function PaletizationView() {
                         // Si la cantidad del pallet no coincide con el total montado,
                         // O ya están todos enviados a SAP,
                         // O el pallet ya fue notificado exitosamente en SAP (sap_success === true),
+                        // O ya se intentó procesar en esta sesión,
                         // mostramos el estilo desactivado (gris/secundario)
+                        hasProcessed ||
                         componentsList.length !== Number(editablePalletAmount) ||
                         !componentsList.some(
                           (component) => component.send_to_sap === false
@@ -582,9 +587,11 @@ function PaletizationView() {
                           : "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
                       }
                       disabled={
-                        // El botón se bloquea si: la cantidad de pallet no coincide con el total montado
-                        // O NO hay nada pendiente por enviar a SAP
+                        // El botón se bloquea si: ya se procesó (éxito o error),
+                        // O la cantidad de pallet no coincide con el total montado,
+                        // O NO hay nada pendiente por enviar a SAP,
                         // O el pallet ya fue procesado exitosamente en SAP
+                        hasProcessed ||
                         componentsList.length !== Number(editablePalletAmount) ||
                         !componentsList.some(
                           (component) => component.send_to_sap === false

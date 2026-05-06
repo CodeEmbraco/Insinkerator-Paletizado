@@ -120,24 +120,24 @@ function ComponentsTable({ selectedItems, palletIdentifier }) {
                   <div className="font-semibold text-left">ID</div>
                 </th>
                 <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
-                  <div className="font-semibold">Código de mat. (UC)</div>
+                  <div className="font-semibold">Código de mat.</div>
                 </th>
                 <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
-                  <div className="font-semibold text-left">Serial (UC)</div>
+                  <div className="font-semibold text-left">Serial </div>
                 </th>
-                <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
+                {/* <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
                   <div className="font-semibold text-left">
-                    Código de mat. (Compresor)
+                    Código de mat.
                   </div>
-                </th>
-                <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
+                </th> */}
+                {/* <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
                   <div className="font-semibold text-left">
                     Serial (Compresor)
                   </div>
-                </th>
-                <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
+                </th> */}
+                {/* <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
                   <div className="font-semibold text-center">SAP Status</div>
-                </th>
+                </th> */}
                 <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
                   <div className="font-semibold text-center">Acciones</div>
                 </th>
