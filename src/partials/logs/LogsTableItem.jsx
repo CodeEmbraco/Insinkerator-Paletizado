@@ -144,13 +144,17 @@ function LogsItem(props) {
           ) : (
             <button
               aria-controls="danger-modal"
-              disabled={props.mounted_components_count < props.quantity}
+              disabled={
+                props.mounted_components_count < props.quantity ||
+                !props.sapAttempted
+              }
               onClick={(e) => {
                 e.stopPropagation();
                 setDangerModalOpen(true);
               }}
               className={`text-center font-semibold w-full ${
-                props.mounted_components_count < props.quantity
+                props.mounted_components_count < props.quantity ||
+                !props.sapAttempted
                   ? "text-slate-400 cursor-not-allowed opacity-50"
                   : "text-primary cursor-pointer"
               }`}
