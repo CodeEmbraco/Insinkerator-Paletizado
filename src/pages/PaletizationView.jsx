@@ -58,6 +58,10 @@ import {
   notifyPalletScanned,
   notifyProductScanned,
 } from "../partials/paletization/Toasts";
+import {
+  DEFAULT_PALLET_QUANTITY,
+  getPalletQuantityForProduct,
+} from "../utils/palletQuantities";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -89,7 +93,9 @@ function PaletizationView() {
 
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [isEditingPalletAmount, setIsEditingPalletAmount] = useState(false);
-  const [editablePalletAmount, setEditablePalletAmount] = useState(280);
+  const [editablePalletAmount, setEditablePalletAmount] = useState(
+    DEFAULT_PALLET_QUANTITY
+  );
 
   const [barcodePallet, setBarcodePallet] = useState("Nuevo pallet");
   const [palletIntermedio, setPalletIntermedio] = useState(null);
@@ -455,6 +461,16 @@ function PaletizationView() {
     );
   };
 
+  // Ajustar "Cantidad pallet" automáticamente según el producto de la orden.
+  // Se ejecuta solo cuando cambia el producto (matnr), de modo que una edición
+  // manual del operador se conserva hasta que seleccione otro producto.
+  useEffect(() => {
+    if (!orderSelected?.matnr) return;
+    const quantity = getPalletQuantityForProduct(orderSelected.matnr);
+    setEditablePalletAmount(quantity);
+    dispatch(setPalletAmount(quantity));
+  }, [orderSelected?.matnr]);
+
   useEffect(() => {
     // Checkear si el pallet seleccionado es null
     if (palletSelected === null) {
@@ -579,9 +595,6 @@ function PaletizationView() {
                         // mostramos el estilo desactivado (gris/secundario)
                         hasProcessed ||
                         componentsList.length !== Number(editablePalletAmount) ||
-                        !componentsList.some(
-                          (component) => component.send_to_sap === false
-                        ) ||
                         palletSelected?.sap_success
                           ? "w-64 h-12 bg-secondary rounded text-slate-400 text-base flex justify-center cursor-not-allowed opacity-70"
                           : "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
@@ -593,9 +606,6 @@ function PaletizationView() {
                         // O el pallet ya fue procesado exitosamente en SAP
                         hasProcessed ||
                         componentsList.length !== Number(editablePalletAmount) ||
-                        !componentsList.some(
-                          (component) => component.send_to_sap === false
-                        ) ||
                         palletSelected?.sap_success
                       }
                     >
