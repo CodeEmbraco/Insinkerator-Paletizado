@@ -53,6 +53,7 @@ import {
 } from "../store/slice/testResultSlice";
 
 import ModalBlank from "../components/ModalBlank";
+import PalletProductMismatchModal from "../components/PalletProductMismatchModal";
 import {
   notifyError,
   notifyPalletScanned,
@@ -109,6 +110,15 @@ function PaletizationView() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [hasProcessed, setHasProcessed] = useState(false);
 
+  // Modal de producto incorrecto: se muestra cuando el producto escaneado no
+  // corresponde al producto de la orden seleccionada (últimos 9 del matnr).
+  const [palletProductMismatchOpen, setPalletProductMismatchOpen] =
+    useState(false);
+  const [palletProductMismatchInfo, setPalletProductMismatchInfo] = useState({
+    expectedProduct: "",
+    scannedProduct: "",
+  });
+
   const palletSelected = useSelector(selectPallet);
 
   const componentsList = useSelector(selectComponents);
@@ -131,6 +141,42 @@ function PaletizationView() {
       }
 
       if (formattedCode.length >= 11) {
+        // Validar que el producto escaneado corresponda a la orden.
+        // El código de producto va en los PRIMEROS 9 caracteres del serial
+        // escaneado (igual que barcodeProduct.slice(0, 9) en la impresión);
+        // el producto de la orden son los ÚLTIMOS 9 del matnr. Si no coinciden,
+        // se bloquea el montaje y se muestra el modal rojo "Producto incorrecto".
+        const scannedProduct = formattedCode.toUpperCase();
+        const expectedProductCode = (
+          orderSelected?.matnr?.slice(-9) ?? ""
+        ).toUpperCase();
+        const scannedProductCode = scannedProduct.slice(0, 9);
+        if (
+          expectedProductCode &&
+          scannedProductCode &&
+          scannedProductCode !== expectedProductCode
+        ) {
+          setPalletProductMismatchInfo({
+            expectedProduct: expectedProductCode,
+            scannedProduct: scannedProductCode,
+          });
+          setPalletProductMismatchOpen(true);
+          dispatch(
+            addEventToPaletizationLog({
+              text:
+                "Producto RECHAZADO: no corresponde a la orden. Esperado: " +
+                expectedProductCode +
+                " | Escaneado: " +
+                scannedProductCode +
+                " (" +
+                scannedProduct +
+                ")",
+              timestamp: new Date().toISOString(),
+            })
+          );
+          return;
+        }
+
         const codeScannedEvent = {
           text:
             "Producto escaneado: " + code.replace(/Shift/g, "").toUpperCase(),
@@ -338,6 +384,8 @@ function PaletizationView() {
     setBarcodeProduct("Escanea producto");
     setPalletIntermedio(null);
     setHasProcessed(false);
+    setPalletProductMismatchOpen(false);
+    setPalletProductMismatchInfo({ expectedProduct: "", scannedProduct: "" });
 
     dispatch(setGlobalStatus(""));
     dispatch(setTestResults([]));
@@ -886,6 +934,13 @@ function PaletizationView() {
           </div>
         </div>
       </div>
+
+      <PalletProductMismatchModal
+        open={palletProductMismatchOpen}
+        onClose={() => setPalletProductMismatchOpen(false)}
+        expectedProduct={palletProductMismatchInfo.expectedProduct}
+        scannedProduct={palletProductMismatchInfo.scannedProduct}
+      />
 
       <ModalBlank
         id="info-modal"
