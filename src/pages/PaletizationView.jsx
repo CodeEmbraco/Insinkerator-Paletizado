@@ -111,7 +111,7 @@ function PaletizationView() {
   const [hasProcessed, setHasProcessed] = useState(false);
 
   // Modal de producto incorrecto: se muestra cuando el producto escaneado no
-  // corresponde al producto de la orden seleccionada (últimos 9 del matnr).
+  // corresponde al producto de la orden seleccionada (últimos 6 del matnr).
   const [palletProductMismatchOpen, setPalletProductMismatchOpen] =
     useState(false);
   const [palletProductMismatchInfo, setPalletProductMismatchInfo] = useState({
@@ -142,15 +142,21 @@ function PaletizationView() {
 
       if (formattedCode.length >= 11) {
         // Validar que el producto escaneado corresponda a la orden.
-        // El código de producto va en los PRIMEROS 9 caracteres del serial
-        // escaneado (igual que barcodeProduct.slice(0, 9) en la impresión);
-        // el producto de la orden son los ÚLTIMOS 9 del matnr. Si no coinciden,
-        // se bloquea el montaje y se muestra el modal rojo "Producto incorrecto".
+        // El serial escaneado trae fecha/turno al inicio y datos extra después
+        // del primer espacio (ej. "26070311483180758A 100530"). Los dígitos
+        // iniciales del serial no coinciden con el matnr; lo que sí es estable
+        // son los ÚLTIMOS 6 caracteres del tramo previo al primer espacio
+        // (ej. "80758A"), que se comparan contra los ÚLTIMOS 6 del matnr. Si
+        // no coinciden, se bloquea el montaje y se muestra el modal rojo.
+        const PRODUCT_CODE_LENGTH = 6;
         const scannedProduct = formattedCode.toUpperCase();
-        const expectedProductCode = (
-          orderSelected?.matnr?.slice(-9) ?? ""
-        ).toUpperCase();
-        const scannedProductCode = scannedProduct.slice(0, 9);
+        const expectedProductCode = (orderSelected?.matnr ?? "")
+          .toUpperCase()
+          .slice(-PRODUCT_CODE_LENGTH);
+        const scannedProductCode = scannedProduct
+          .trim()
+          .split(/\s+/)[0]
+          .slice(-PRODUCT_CODE_LENGTH);
         if (
           expectedProductCode &&
           scannedProductCode &&
