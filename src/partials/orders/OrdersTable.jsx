@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Order from './OrdersTableItem';
 import { useSelector, useDispatch } from 'react-redux';
 
-import {   getOpenOrdersList, selectOpenOrdersList } from '../../store/slice/ordersSlice';
+import {   getOpenOrdersList, selectOpenOrdersList, selectLoading } from '../../store/slice/ordersSlice';
 
 function OrdersTable({
   selectedItems
@@ -49,6 +49,7 @@ function OrdersTable({
 
   const dispatch = useDispatch();
   const openOrdersList = useSelector(selectOpenOrdersList);
+  const ordersLoading = useSelector(selectLoading);
   const [list, setList] = useState(useSelector(selectOpenOrdersList));
 
   useEffect(() => {
@@ -90,6 +91,19 @@ function OrdersTable({
 
   return (
     <div className="bg-white shadow-lg rounded-sm border border-slate-200 relative">
+      {ordersLoading && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 rounded-sm">
+          <svg
+            className="animate-spin bg-transparent w-8 h-8 fill-current shrink-0 text-primary"
+            viewBox="0 0 16 16"
+          >
+            <path d="M8 16a7.928 7.928 0 01-3.428-.77l.857-1.807A6.006 6.006 0 0014 8c0-3.309-2.691-6-6-6a6.006 6.006 0 00-5.422 8.572l-1.806.859A7.929 7.929 0 010 8c0-4.411 3.589-8 8-8s8 3.589 8 8-3.589 8-8 8z" />
+          </svg>
+          <p className="mt-3 text-sm font-medium text-slate-600">
+            Consultando órdenes en SAP...
+          </p>
+        </div>
+      )}
       <header className="px-5 py-4">
         <h2 className="text-left font-semibold text-slate-800">Todas las órdenes: <span className="text-slate-400 font-medium">{openOrdersList.length}</span></h2>
         <p className="text-left font-medium text-gray">Da click en un número de órden para empezar a trabajarla</p>
