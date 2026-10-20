@@ -9,6 +9,13 @@ export default defineConfig({
   },
   plugins: [react()],
   base: './',
+  server: {
+    // Evitar que el file-watcher vigile artefactos de build (.zip, dist),
+    // que en Windows pueden quedar bloqueados y tirar el dev server (EBUSY).
+    watch: {
+      ignored: ['**/*.zip', '**/dist/**'],
+    },
+  },
   resolve: {
     alias: [
       {

@@ -48,7 +48,8 @@ function LogsItem(props) {
       await dispatch(
         reprocessPallet(props.identifier, props.mounted_components_count)
       );
-      await props.fetchPallets("&workstation=MX8ST040");
+      // Refresca la página actual (respetando el filtro) en segundo plano
+      props.fetchPallets();
     } catch (error) {
       console.log("Error al reprocesar el lote: " + error);
     } finally {

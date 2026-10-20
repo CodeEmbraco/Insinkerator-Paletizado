@@ -64,6 +64,9 @@ import {
   getPalletQuantityForProduct,
 } from "../utils/palletQuantities";
 
+// Contraseña requerida para modificar manualmente la cantidad de piezas por pallet.
+const PALLET_AMOUNT_PASSWORD = "embraco123";
+
 const useStyles = makeStyles((theme) => ({
   root: {
     display: "flex",
@@ -98,6 +101,14 @@ function PaletizationView() {
     DEFAULT_PALLET_QUANTITY
   );
 
+  // Bloqueo por contraseña previo a editar la cantidad de pallet
+  const [palletAmountPasswordOpen, setPalletAmountPasswordOpen] =
+    useState(false);
+  const [palletAmountPasswordInput, setPalletAmountPasswordInput] =
+    useState("");
+  const [palletAmountPasswordError, setPalletAmountPasswordError] =
+    useState(false);
+
   const [barcodePallet, setBarcodePallet] = useState("Nuevo pallet");
   const [palletIntermedio, setPalletIntermedio] = useState(null);
   const [idAuto, setIdAuto] = useState(1);
@@ -130,9 +141,11 @@ function PaletizationView() {
   };
 
   useScanDetection({
-    preventDefault: !isEditingPalletAmount,
+    // Mientras se edita la cantidad o se escribe la contraseña, no bloquear el teclado
+    preventDefault: !isEditingPalletAmount && !palletAmountPasswordOpen,
     onComplete: async (code) => {
       console.log(code);
+      if (palletAmountPasswordOpen) return;
 
       const formattedCode = code.replace(/Shift/g, "");
       if (componentsList.length != 0 && componentsList.length == palletamount) {
@@ -141,6 +154,25 @@ function PaletizationView() {
       }
 
       if (formattedCode.length >= 11) {
+        // Bloquear el escaneo de piezas si no hay un pallet activo
+        // (seleccionado con "Nuevo pallet" o escaneado previamente).
+        const hasActivePallet =
+          barcodePallet !== "Nuevo pallet" || !!palletSelected?.identifier;
+        if (!hasActivePallet) {
+          notifyError(
+            "Selecciona o escanea un pallet antes de escanear piezas"
+          );
+          dispatch(
+            addEventToPaletizationLog({
+              text:
+                "Pieza RECHAZADA: no hay pallet activo. Escaneado: " +
+                formattedCode.toUpperCase(),
+              timestamp: new Date().toISOString(),
+            })
+          );
+          return;
+        }
+
         // Validar que el producto escaneado corresponda a la orden.
         // El serial escaneado trae fecha/turno al inicio y datos extra después
         // del primer espacio (ej. "26070311483180758A 100530"). Los dígitos
@@ -410,7 +442,20 @@ function PaletizationView() {
   }
 
   const handlePalletAmountDoubleClick = () => {
-    setIsEditingPalletAmount(true);
+    setPalletAmountPasswordInput("");
+    setPalletAmountPasswordError(false);
+    setPalletAmountPasswordOpen(true);
+  };
+
+  const handleValidatePalletAmountPassword = () => {
+    if (palletAmountPasswordInput === PALLET_AMOUNT_PASSWORD) {
+      setPalletAmountPasswordError(false);
+      setPalletAmountPasswordInput("");
+      setPalletAmountPasswordOpen(false);
+      setIsEditingPalletAmount(true); // contraseña correcta: habilitar edición
+    } else {
+      setPalletAmountPasswordError(true);
+    }
   };
 
   const validateAndApplyPalletAmount = (rawValue) => {
@@ -784,7 +829,7 @@ function PaletizationView() {
                           <span
                             onDoubleClick={handlePalletAmountDoubleClick}
                             className="cursor-pointer hover:bg-gray-100 px-2 py-1 rounded"
-                            title="Double click to edit"
+                            title="Doble clic para editar (requiere contraseña)"
                           >
                             {editablePalletAmount}
                           </span>
@@ -947,6 +992,87 @@ function PaletizationView() {
         expectedProduct={palletProductMismatchInfo.expectedProduct}
         scannedProduct={palletProductMismatchInfo.scannedProduct}
       />
+
+      {/* Password Modal (bloqueo previo a editar la cantidad de pallet) */}
+      <ModalBlank
+        id="pallet-amount-password-modal"
+        modalOpen={palletAmountPasswordOpen}
+        setModalOpen={setPalletAmountPasswordOpen}
+      >
+        <div className="p-5 flex space-x-4">
+          {/* Icon */}
+          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-secondary">
+            <svg
+              className="w-4 h-4 shrink-0 fill-current text-primary"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" />
+            </svg>
+          </div>
+          {/* Content */}
+          <div className="w-full">
+            {/* Modal header */}
+            <div className="mb-2">
+              <div className="text-lg font-semibold text-slate-800">
+                Contraseña requerida
+              </div>
+            </div>
+            {/* Modal content */}
+            <div className="text-sm mb-6">
+              <p className="text-black">
+                Ingresa la contraseña para modificar la cantidad de piezas por
+                pallet.
+              </p>
+              <div className="mt-4">
+                <input
+                  type="password"
+                  autoFocus
+                  value={palletAmountPasswordInput}
+                  onChange={(e) => {
+                    setPalletAmountPasswordInput(e.target.value);
+                    if (palletAmountPasswordError)
+                      setPalletAmountPasswordError(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleValidatePalletAmountPassword();
+                    }
+                  }}
+                  className="form-input w-full h-12"
+                  placeholder="Contraseña"
+                />
+                {palletAmountPasswordError && (
+                  <p className="text-sm text-red-500 mt-2">
+                    Contraseña incorrecta.
+                  </p>
+                )}
+              </div>
+            </div>
+            {/* Modal footer */}
+            <div className="flex flex-wrap justify-end space-x-2">
+              <button
+                className="btn-sm border-slate-200 hover:border-slate-300 text-slate-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPalletAmountPasswordOpen(false);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-sm bg-primary hover:bg-primary-500 text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleValidatePalletAmountPassword();
+                }}
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      </ModalBlank>
 
       <ModalBlank
         id="info-modal"

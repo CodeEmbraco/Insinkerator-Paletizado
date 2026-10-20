@@ -5,7 +5,7 @@ export const notifyPalletScanned = (code) => toast.success('Pallet escaneado: ' 
 
 export const notifyOrderSelected = (number) => toast.success(`Órden ${number} seleccionada`);
 
-export const notifyProductScanned = (code) => toast.success('Compresor escaneado: ' + code, { style: {} });
+export const notifyProductScanned = (code) => toast.success('Material escaneado: ' + code, { style: {} });
 
 export const notifyCondenserScanned = (code) => toast.success('Condensador escaneado: ' + code, { style: {} });
 

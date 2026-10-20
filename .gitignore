@@ -22,3 +22,4 @@ dist-ssr
 *.sw?
 dist.zip
 insinkerator-etiqueta-nueva.zip
+*.zip

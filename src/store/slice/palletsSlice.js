@@ -12,6 +12,7 @@ import {
 } from "../../partials/paletization/Toasts";
 import { tailwindConfig } from "../../utils/Utils";
 import { endpointsCodes } from "./endpointCodes";
+import { prefetchLogs } from "../../utils/logsCache";
 
 const initialState = {
   pallet: {},
@@ -429,6 +430,7 @@ export const reprocessPallet = (palletIdentifier, qty) => async (dispatch) => {
     notifyErrorInSAP(palletIdentifier, error.message);
     endpointsCodes(error, dispatch, setNotFound);
   }
+  prefetchLogs();
 };
 
 export const processInSAP =
@@ -461,7 +463,7 @@ export const processInSAP =
       IDataProd: currentDate,
       IHoraProd: currentTime,
       IQuantProd: ItJsonInst.length,
-      INumin: "6",//este cambia entre 6 y F
+      INumin: "H",//este cambia entre 6 y F
       ItJsonInst: ItJsonInst,
     };
     console.log(xmlData);
@@ -482,6 +484,18 @@ export const processInSAP =
           ) {
             console.log("Notificación exitosa");
             notifySuccesInSAP(xmlData.ICharg, response.data.EMessage);
+            // Reflejar el resultado de inmediato sin esperar la relectura de
+            // series; la confirmación del backend llega en segundo plano.
+            dispatch(setPallet({ ...pallet, send_to_sap: true, sap_success: true }));
+            dispatch(
+              setComponents(
+                components.map((component) => ({
+                  ...component,
+                  send_to_sap: true,
+                  sap_status: "Procesado",
+                }))
+              )
+            );
             dispatch(getAllComponents(pallet.identifier));
           } else {
             dispatch(setLoadingProcessInSap(false));
@@ -496,5 +510,7 @@ export const processInSAP =
         dispatch(setLoadingProcessInSap(false));
         console.log(error);
         notifyErrorInSAP(xmlData.ICharg, error.message);
-      });
+      })
+      // Precargar la bitácora para que abra sin esperar al backend
+      .finally(() => prefetchLogs());
   };

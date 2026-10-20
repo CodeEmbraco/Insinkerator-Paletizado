@@ -20,6 +20,12 @@ import {
   ArrowRight2,
 } from "iconsax-react";
 import DropdownFilter from "../../components/DropdownFilter";
+import {
+  DEFAULT_LOGS_QUERY,
+  LOGS_PAGE_SIZE,
+  fetchLogsPage,
+  getCachedLogsPage,
+} from "../../utils/logsCache";
 function LogsTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -27,23 +33,33 @@ function LogsTable() {
   const [count, setCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false);
   // Mantener el filtro activo para que se conserve al cambiar de página
-  const [filterQuery, setFilterQuery] = useState("&workstation=MX8ST040");
+  const [filterQuery, setFilterQuery] = useState(DEFAULT_LOGS_QUERY);
 
   useEffect(() => {
-    fetchPallets(filterQuery);
+    fetchPallets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, filterQuery]);
 
-  const fetchPallets = async (queryParams) => {
-    setIsLoading(true);
+  const applyLogsPage = ({ pallets, count }) => {
+    setPallets(pallets);
+    setCount(count);
+    setTotalPages(Math.max(Math.ceil(count / LOGS_PAGE_SIZE), 1));
+  };
+
+  // Si la página ya está en caché se muestra al instante y se refresca en
+  // segundo plano sin el overlay de carga; si no, se muestra el overlay.
+  const fetchPallets = async () => {
+    const page = currentPage;
+    const query = filterQuery;
+    const cached = getCachedLogsPage(page, query);
+    if (cached) {
+      applyLogsPage(cached);
+    } else {
+      setIsLoading(true);
+    }
     try {
-      const response = await fetch(
-        `http://10.13.225.20:8002/api/v1/paletization/logs/?page=${currentPage}&page_size=10${queryParams}`
-      );
-      const data = await response.json();
-      setPallets(data.results.pallets);
-      setCount(data.count);
-      setTotalPages(Math.ceil(data.count / 10)); // Assuming 10 pallets per page
+      const fresh = await fetchLogsPage(page, query);
+      applyLogsPage(fresh);
     } catch (error) {
       console.error("Error fetching pallets:", error);
     } finally {
@@ -91,9 +107,9 @@ function LogsTable() {
     setCurrentPage(1);
     // Actualizar el filtro activo; el useEffect dispara el fetch
     if (sapSuccess === "none" || sapSuccess === "all") {
-      setFilterQuery("&workstation=MX8ST040");
+      setFilterQuery(DEFAULT_LOGS_QUERY);
     } else {
-      setFilterQuery(`&workstation=MX8ST040&sap_success=${sapSuccess}`);
+      setFilterQuery(`${DEFAULT_LOGS_QUERY}&sap_success=${sapSuccess}`);
     }
   };
   const orders = [
