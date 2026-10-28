@@ -384,6 +384,10 @@ function PaletizationView() {
   // }, []);
 
   function handleClickNewPallet() {
+    // Reiniciar el estado del pallet anterior (igual que "Nuevo" o al escanear
+    // un pallet). Sin esto, hasProcessed quedaba en true tras procesar el pallet
+    // anterior y el botón "Procesar" del nuevo pallet nunca se habilitaba.
+    handleNew();
     getLastPallet()
       .then((result) => {
         const { nuevoIdentificador, id } = result;
@@ -762,10 +766,7 @@ function PaletizationView() {
                             Pallet
                           </h3>
                         </div>
-                        <p
-                          className="bg-white xl:text-3xl md:text-lg font-bold text-black"
-                          onClick={handleClickNewPallet}
-                        >
+                        <p className="bg-white xl:text-3xl md:text-lg font-bold text-black">
                           {Object.keys(orderSelected).length === 0
                             ? "Selecciona órden"
                             : barcodePallet}
