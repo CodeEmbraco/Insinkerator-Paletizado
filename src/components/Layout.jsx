@@ -42,6 +42,8 @@ function Layout({ icon, nameRoute, nameSubRoute, children }) {
 
   const handleOpenContinuePalletModal = () => {
     dispatch(getLogs());
+    // Listado fresco de órdenes: el modal solo ofrece pallets de órdenes abiertas
+    dispatch(getOpenOrdersList());
     setContinuePalletModalOpen(true);
   };
 

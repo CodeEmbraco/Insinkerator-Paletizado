@@ -68,6 +68,7 @@ import {
   DEFAULT_PALLET_QUANTITY,
   getPalletQuantityForProduct,
 } from "../utils/palletQuantities";
+import { getOrderRemaining } from "../utils/orderQuantities";
 
 // Contraseña requerida para modificar manualmente la cantidad de piezas por pallet.
 const PALLET_AMOUNT_PASSWORD = "embraco123";
@@ -155,6 +156,16 @@ function PaletizationView() {
 
   const isLoading = useSelector(selectLoadingProcessInSap);
 
+  // Espacio de la orden en SAP (planeado - apuntado) y piezas de este pallet
+  // que todavía no se han notificado. La cantidad a notificar nunca debe
+  // exceder el espacio de la orden.
+  const orderRemaining = getOrderRemaining(orderSelected);
+  const pendingToNotify = componentsList.filter(
+    (component) => !component.send_to_sap
+  ).length;
+  const exceedsOrderSpace =
+    orderRemaining !== null && pendingToNotify > orderRemaining;
+
   const handleSelectedItems = (selectedItems) => {
     setSelectedItems([...selectedItems]);
   };
@@ -202,6 +213,34 @@ function PaletizationView() {
             addEventToPaletizationLog({
               text:
                 "Pieza RECHAZADA: no hay pallet activo. Escaneado: " +
+                formattedCode.toUpperCase(),
+              timestamp: new Date().toISOString(),
+            })
+          );
+          return;
+        }
+
+        // La orden ya no admite más piezas: no se monta nada más en el pallet.
+        if (orderRemaining !== null && pendingToNotify >= orderRemaining) {
+          notifyError(
+            "La orden " +
+              orderSelected.aufnr +
+              " solo admite " +
+              orderRemaining +
+              " piezas más en SAP y el pallet ya tiene " +
+              pendingToNotify +
+              " por notificar."
+          );
+          dispatch(
+            addEventToPaletizationLog({
+              text:
+                "Pieza RECHAZADA: la orden " +
+                orderSelected.aufnr +
+                " no tiene espacio (pendientes en SAP: " +
+                orderRemaining +
+                ", por notificar en el pallet: " +
+                pendingToNotify +
+                "). Escaneado: " +
                 formattedCode.toUpperCase(),
               timestamp: new Date().toISOString(),
             })
@@ -573,6 +612,31 @@ function PaletizationView() {
   }
 
   async function handleNotify() {
+    if (exceedsOrderSpace) {
+      notifyError(
+        "No se puede notificar: el pallet tiene " +
+          pendingToNotify +
+          " piezas por notificar y la orden " +
+          orderSelected.aufnr +
+          " solo admite " +
+          orderRemaining +
+          "."
+      );
+      dispatch(
+        addEventToPaletizationLog({
+          text:
+            "Procesar RECHAZADO: cantidad a notificar (" +
+            pendingToNotify +
+            ") excede el espacio de la orden " +
+            orderSelected.aufnr +
+            " (" +
+            orderRemaining +
+            ").",
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return;
+    }
     setHasProcessed(true);
     const ok = await dispatch(processInSAP(orderSelected, palletSelected, componentsList));
     if (ok) {
@@ -851,7 +915,8 @@ function PaletizationView() {
                         // mostramos el estilo desactivado (gris/secundario)
                         hasProcessed ||
                         componentsList.length !== Number(editablePalletAmount) ||
-                        palletSelected?.sap_success
+                        palletSelected?.sap_success ||
+                        exceedsOrderSpace
                           ? "w-64 h-12 bg-secondary rounded text-slate-400 text-base flex justify-center cursor-not-allowed opacity-70"
                           : "w-64 h-12 bg-primary rounded text-white text-base flex justify-center hover:bg-green-500"
                       }
@@ -862,7 +927,8 @@ function PaletizationView() {
                         // O el pallet ya fue procesado exitosamente en SAP
                         hasProcessed ||
                         componentsList.length !== Number(editablePalletAmount) ||
-                        palletSelected?.sap_success
+                        palletSelected?.sap_success ||
+                        exceedsOrderSpace
                       }
                     >
                       <span className="bg-transparent my-auto text-white font-semibold">
@@ -881,6 +947,17 @@ function PaletizationView() {
             </div>
           ) : (
             null
+          )}
+          {/* La cantidad a notificar excede el espacio de la orden en SAP */}
+          {exceedsOrderSpace && (
+            <div className="mt-2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span className="block sm:inline">
+                El pallet tiene <b>{pendingToNotify}</b> piezas por notificar, pero la orden{" "}
+                <b>{orderSelected.aufnr}</b> solo admite <b>{orderRemaining}</b> más en SAP
+                (planeado {orderSelected.qtdpl}, apuntado {orderSelected.qtdpr}). No se puede
+                procesar hasta desmontar el excedente o cambiar de orden.
+              </span>
+            </div>
           )}
 
           <div className="max-w-full mx-4 py-0 sm:mx-auto">
@@ -1039,6 +1116,15 @@ function PaletizationView() {
                             ? "Selecciona órden"
                             : orderSelected.aufnr}
                         </p>
+                        {orderRemaining !== null && (
+                          <p
+                            className={`bg-white text-sm font-medium mt-1 ${
+                              exceedsOrderSpace ? "text-red-600" : "text-slate-500"
+                            }`}
+                          >
+                            Pendientes en SAP: {orderRemaining}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

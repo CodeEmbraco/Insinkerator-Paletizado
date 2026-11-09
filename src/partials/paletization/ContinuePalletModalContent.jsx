@@ -12,6 +12,11 @@ import {
   setOrderSelected,
   getMetadataFromOrder,
 } from "../../store/slice/orderSelectedSlice";
+import {
+  selectOpenOrdersList,
+  selectLoading as selectOrdersLoading,
+} from "../../store/slice/ordersSlice";
+import { findOpenOrder } from "../../utils/orderQuantities";
 import { ArrowLeft, ArrowRight } from "iconsax-react";
 
 function formatTimestampToDDMMYYYYHHMMSS(timestamp) {
@@ -32,6 +37,11 @@ function ContinuePalletModalContent({ onClose }) {
   const dispatch = useDispatch();
   const logsData = useSelector(selectLogs);
   const logsLoading = useSelector(selectLogsLoading);
+  // Solo se pueden continuar pallets de órdenes que siguen en el servicio de
+  // órdenes (con cantidad pendiente). Si la orden ya no aparece, se llegó a la
+  // cantidad esperada y ese pallet no debe ofrecerse.
+  const openOrders = useSelector(selectOpenOrdersList);
+  const ordersLoading = useSelector(selectOrdersLoading);
 
   const normalizedLogs = (() => {
     if (!logsData) return null;
@@ -108,6 +118,32 @@ function ContinuePalletModalContent({ onClose }) {
     );
   }
 
+  if (ordersLoading && (!openOrders || openOrders.length === 0)) {
+    return (
+      <div className="flex items-center justify-center py-6 text-sm text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin" />
+          <span>Consultando órdenes abiertas en SAP...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!openOrders || openOrders.length === 0) {
+    return (
+      <div className="text-sm text-slate-500">
+        No hay órdenes con cantidad pendiente en SAP. Solo se pueden continuar
+        pallets de órdenes abiertas.
+      </div>
+    );
+  }
+
+  // Pallets cuya orden sigue abierta, junto con la orden completa del servicio
+  const continuablePallets = normalizedLogs.pallets
+    .map((row) => ({ row, openOrder: findOpenOrder(openOrders, row.pallet.order) }))
+    .filter(({ openOrder }) => Boolean(openOrder));
+  const hiddenCount = normalizedLogs.pallets.length - continuablePallets.length;
+
   return (
     <div className="overflow-x-auto">
       {logsLoading && (
@@ -118,8 +154,14 @@ function ContinuePalletModalContent({ onClose }) {
           </div>
         </div>
       )}
-      <p className="text-left font-semibold text-slate-800 mb-4">
+      <p className="text-left font-semibold text-slate-800 mb-1">
         Da click en un pallet para continuar.
+      </p>
+      <p className="text-left text-xs text-slate-500 mb-4">
+        Solo se muestran pallets de órdenes con cantidad pendiente en SAP
+        {hiddenCount > 0
+          ? ` (${hiddenCount} de esta página pertenecen a órdenes ya completadas).`
+          : "."}
       </p>
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         <thead className="bg-slate-50">
@@ -145,7 +187,14 @@ function ContinuePalletModalContent({ onClose }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200">
-          {normalizedLogs.pallets.map((row) => {
+          {continuablePallets.length === 0 && (
+            <tr>
+              <td colSpan={6} className="px-3 py-4 text-center text-slate-500">
+                Ningún pallet de esta página pertenece a una orden abierta.
+              </td>
+            </tr>
+          )}
+          {continuablePallets.map(({ row, openOrder }) => {
             const pallet = row.pallet;
             const mountedCount =
               typeof row.mounted_components_count === "number"
@@ -166,16 +215,16 @@ function ContinuePalletModalContent({ onClose }) {
                 className="hover:bg-slate-100 cursor-pointer"
                 onClick={() => {
                   dispatch(setPallet(pallet));
-                  // Sincronizar orden y producto seleccionados con el pallet de logs
-                  if (pallet.order && pallet.product) {
-                    dispatch(
-                      setOrderSelected({
-                        aufnr: pallet.order,
-                        matnr: pallet.product,
-                      })
-                    );
-                    //dispatch(getMetadataFromOrder(pallet.product));
-                  }
+                  // Sincronizar la orden seleccionada con la orden completa del
+                  // servicio (incluye cantidades planeada/apuntada para el tope)
+                  dispatch(
+                    setOrderSelected({
+                      ...openOrder,
+                      aufnr: openOrder.aufnr ?? pallet.order,
+                      matnr: openOrder.matnr ?? pallet.product,
+                    })
+                  );
+                  //dispatch(getMetadataFromOrder(pallet.product));
                   dispatch(getAllComponents(pallet.identifier));
                   if (onClose) {
                     onClose();
