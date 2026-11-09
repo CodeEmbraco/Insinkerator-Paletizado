@@ -23,6 +23,7 @@ import DropdownFilter from "../../components/DropdownFilter";
 import {
   DEFAULT_LOGS_QUERY,
   LOGS_PAGE_SIZE,
+  buildLogsQuery,
   fetchLogsPage,
   getCachedLogsPage,
 } from "../../utils/logsCache";
@@ -102,15 +103,11 @@ function LogsTable() {
     return pages;
   };
 
-  const applyFilter = (sapSuccess) => {
+  const applyFilter = (sapSuccess, hideEmpty = true) => {
     // Volver a la primera página al aplicar el filtro
     setCurrentPage(1);
     // Actualizar el filtro activo; el useEffect dispara el fetch
-    if (sapSuccess === "none" || sapSuccess === "all") {
-      setFilterQuery(DEFAULT_LOGS_QUERY);
-    } else {
-      setFilterQuery(`${DEFAULT_LOGS_QUERY}&sap_success=${sapSuccess}`);
-    }
+    setFilterQuery(buildLogsQuery(sapSuccess, hideEmpty));
   };
   const orders = [
     {

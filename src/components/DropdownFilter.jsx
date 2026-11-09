@@ -8,6 +8,8 @@ function DropdownFilter({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificadosSelected, setNotificadosSelected] = useState(false);
   const [pendientesSelected, setPendientesSelected] = useState(false);
+  // Por defecto no se listan pallets creados en 0 (sin componentes montados)
+  const [ocultarVaciosSelected, setOcultarVaciosSelected] = useState(true);
 
   const trigger = useRef(null);
   const dropdown = useRef(null);
@@ -24,7 +26,7 @@ function DropdownFilter({
     } else {
       var sapSuccess = "none"
     }
-    applyFilter(sapSuccess);
+    applyFilter(sapSuccess, ocultarVaciosSelected);
   };
   // close on click outside
   useEffect(() => {
@@ -50,6 +52,7 @@ function DropdownFilter({
   const limpiarFiltros = () => {
     setNotificadosSelected(false);
     setPendientesSelected(false);
+    setOcultarVaciosSelected(true);
   };
 
   return (
@@ -100,6 +103,17 @@ function DropdownFilter({
                   onChange={() => setPendientesSelected(!pendientesSelected)}
                 />
                 <span className="text-sm font-medium ml-2">Pendientes</span>
+              </label>
+            </li>
+            <li className="py-1 px-3">
+              <label className="flex items-center whitespace-nowrap">
+                <input
+                  type="checkbox"
+                  className="form-checkbox"
+                  checked={ocultarVaciosSelected}
+                  onChange={() => setOcultarVaciosSelected(!ocultarVaciosSelected)}
+                />
+                <span className="text-sm font-medium ml-2">Ocultar pallets en 0</span>
               </label>
             </li>
           </ul>

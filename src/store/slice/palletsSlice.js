@@ -13,6 +13,7 @@ import {
 import { tailwindConfig } from "../../utils/Utils";
 import { endpointsCodes } from "./endpointCodes";
 import { prefetchLogs } from "../../utils/logsCache";
+import { addEventToPaletizationLog } from "./eventsLogSlice";
 
 const initialState = {
   pallet: {},
@@ -252,8 +253,10 @@ export const getLastPallet = () => {
     .catch((error) => endpointsCodes(error, dispatch, setNotFound));
 };
 
+// onError() se invoca si el API rechazó o no respondió.
+// onOrderMismatch(palletOrder) se invoca si el pallet ya existe ligado a otra orden.
 export const createPallet =
-  (order, barcode, product, quantity, idAuto) => (dispatch) => {
+  (order, barcode, product, quantity, idAuto, onError, onOrderMismatch) => (dispatch) => {
     const palletData = {
       workstation: "MX8ST040",
       order: order,
@@ -272,13 +275,66 @@ export const createPallet =
           const palletIdentifier = response.data.identifier;
           dispatch(getAllComponents(palletIdentifier));
         } else if (response.status === 200) {
-          console.log("Se encontró registro de Pallet:", response.data);
-          dispatch(setPallet(response.data));
-          console.log(palletIdentifier);
+          const pallet = response.data;
+          // El pallet ya existe en BD ligado a otra orden: no se reutiliza, porque
+          // SAP recibiría la orden actual y la BD conservaría la anterior.
+          if (pallet?.order && order && String(pallet.order) !== String(order)) {
+            dispatch(
+              addEventToPaletizationLog({
+                text:
+                  "Pallet " + barcode + " RECHAZADO: pertenece a la orden " + pallet.order +
+                  " y la orden seleccionada es " + order + ".",
+                timestamp: new Date().toISOString(),
+              })
+            );
+            onError?.();
+            onOrderMismatch?.(pallet.order);
+            return;
+          }
+          console.log("Se encontró registro de Pallet:", pallet);
+          dispatch(setPallet(pallet));
+          dispatch(getAllComponents(pallet.identifier));
         }
       })
-      .catch((error) => endpointsCodes(error, dispatch, setNotFound));
+      .catch((error) => {
+        onError?.();
+        endpointsCodes(error, dispatch, setNotFound);
+      });
   };
+
+// Reasigna la orden (y producto) de un pallet que aún no se notificó a SAP.
+// La autorización por contraseña se valida en la pantalla. Devuelve la
+// respuesta del API o null si falló.
+export const changePalletOrder = (palletIdentifier, order, product) => async (dispatch) => {
+  try {
+    const response = await axios.post(
+      `http://10.13.225.20:8002/api/v1/paletization/pallets/${palletIdentifier}/change-order/`,
+      { order, product }
+    );
+    dispatch(
+      addEventToPaletizationLog({
+        text:
+          "Pallet " + palletIdentifier + " reasignado de la orden " + response.data.previous_order +
+          " a la orden " + order + " (autorizado con contraseña)." +
+          (response.data.mounted_components
+            ? " Componentes montados: " + response.data.mounted_components + "."
+            : ""),
+        timestamp: new Date().toISOString(),
+      })
+    );
+    return response.data;
+  } catch (error) {
+    const msg = error?.response?.data?.error || error.message;
+    notifyError("No se pudo cambiar la orden del pallet: " + msg);
+    dispatch(
+      addEventToPaletizationLog({
+        text: "Cambio de orden del pallet " + palletIdentifier + " RECHAZADO: " + msg,
+        timestamp: new Date().toISOString(),
+      })
+    );
+    return null;
+  }
+};
 
 export const getAllComponents = (palletIdentifier) => (dispatch) => {
   //dispatch(setLoading(true));
@@ -468,7 +524,8 @@ export const processInSAP =
     };
     console.log(xmlData);
 
-    axios
+    // Devuelve una promesa que resuelve true solo si SAP aceptó la notificación.
+    return axios
       .post(
         `http://10.13.225.20:8002/api/v1/paletization/pallets/sap/notifiy/`,
         xmlData
@@ -497,6 +554,7 @@ export const processInSAP =
               )
             );
             dispatch(getAllComponents(pallet.identifier));
+            return true;
           } else {
             dispatch(setLoadingProcessInSap(false));
             console.log("Error!");
@@ -505,11 +563,13 @@ export const processInSAP =
           }
         } else {
         }
+        return false;
       })
       .catch((error) => {
         dispatch(setLoadingProcessInSap(false));
         console.log(error);
         notifyErrorInSAP(xmlData.ICharg, error.message);
+        return false;
       })
       // Precargar la bitácora para que abra sin esperar al backend
       .finally(() => prefetchLogs());

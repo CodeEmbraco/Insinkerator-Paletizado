@@ -4,7 +4,16 @@
 // refresca en segundo plano (stale-while-revalidate).
 
 export const LOGS_PAGE_SIZE = 10;
-export const DEFAULT_LOGS_QUERY = "&workstation=MX8ST040";
+
+// Query de la bitácora. Por defecto se ocultan los pallets creados en 0
+// (with_components=true); el filtro de la tabla permite quitarlo.
+export const buildLogsQuery = (sapSuccess = "none", hideEmpty = true) => {
+  let query = "&workstation=MX8ST040";
+  if (hideEmpty) query += "&with_components=true";
+  if (sapSuccess === "true" || sapSuccess === "false") query += `&sap_success=${sapSuccess}`;
+  return query;
+};
+export const DEFAULT_LOGS_QUERY = buildLogsQuery();
 
 const cache = new Map();
 const inFlight = new Map();

@@ -24,6 +24,8 @@ import {
   palletAmount,
   selectOrderSelected,
   setPalletAmount,
+  setOrderSelected,
+  setMetadataOrderSelected,
 } from "../store/slice/orderSelectedSlice";
 
 import ComponentsTable from "../partials/paletization/ComponentsTable";
@@ -33,6 +35,7 @@ import {
 } from "../store/slice/eventsLogSlice";
 import {
   createPallet,
+  changePalletOrder,
   mountComponent,
   processInSAP,
   selectComponents,
@@ -53,7 +56,9 @@ import {
 } from "../store/slice/testResultSlice";
 
 import ModalBlank from "../components/ModalBlank";
+import { requestOpenOrders } from "../components/Layout";
 import PalletProductMismatchModal from "../components/PalletProductMismatchModal";
+import PalletOrderMismatchModal from "../components/PalletOrderMismatchModal";
 import {
   notifyError,
   notifyPalletScanned,
@@ -66,6 +71,8 @@ import {
 
 // Contraseña requerida para modificar manualmente la cantidad de piezas por pallet.
 const PALLET_AMOUNT_PASSWORD = "embraco123";
+// Contraseña de administrador para reasignar un pallet a otra orden.
+const CHANGE_ORDER_PASSWORD = "NidecNGA-TI26";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -130,6 +137,18 @@ function PaletizationView() {
     scannedProduct: "",
   });
 
+  // El pallet escaneado ya existe ligado a otra orden
+  const [palletOrderMismatchOpen, setPalletOrderMismatchOpen] = useState(false);
+  const [palletOrderMismatchInfo, setPalletOrderMismatchInfo] = useState({
+    pallet: "",
+    palletOrder: "",
+    selectedOrder: "",
+  });
+  // Contraseña de administrador para reasignar el pallet a la orden seleccionada
+  const [changeOrderPasswordOpen, setChangeOrderPasswordOpen] = useState(false);
+  const [changeOrderPasswordInput, setChangeOrderPasswordInput] = useState("");
+  const [changeOrderPasswordError, setChangeOrderPasswordError] = useState(false);
+
   const palletSelected = useSelector(selectPallet);
 
   const componentsList = useSelector(selectComponents);
@@ -142,12 +161,29 @@ function PaletizationView() {
 
   useScanDetection({
     // Mientras se edita la cantidad o se escribe la contraseña, no bloquear el teclado
-    preventDefault: !isEditingPalletAmount && !palletAmountPasswordOpen,
+    preventDefault:
+      !isEditingPalletAmount && !palletAmountPasswordOpen && !changeOrderPasswordOpen,
     onComplete: async (code) => {
       console.log(code);
-      if (palletAmountPasswordOpen) return;
+      if (palletAmountPasswordOpen || changeOrderPasswordOpen) return;
 
       const formattedCode = code.replace(/Shift/g, "");
+
+      // Sin orden seleccionada no se escanea nada: cada pallet nuevo exige
+      // elegir la orden primero (evita pallets ligados a la orden anterior).
+      if (!orderSelected?.aufnr) {
+        notifyError("Selecciona la orden antes de escanear.");
+        dispatch(
+          addEventToPaletizationLog({
+            text:
+              "Escaneo ignorado: no hay orden seleccionada. Código: " +
+              formattedCode.toUpperCase(),
+            timestamp: new Date().toISOString(),
+          })
+        );
+        requestOpenOrders();
+        return;
+      }
       if (componentsList.length != 0 && componentsList.length == palletamount) {
         notifyError("Cantidad de pallet ya está completada");
         return;
@@ -249,18 +285,10 @@ function PaletizationView() {
         console.log(data);
         dispatch(mountComponent(data));
       } else {
-        handleNew();
-        console.log("HDR Toy escaneando pallet");
-        // Si la cadena es más corta, considerarla un ID de pallet
-        const codeScannedEvent = {
-          text: "Pallet escaneado: " + code.replace(/Shift/g, "").toUpperCase(),
-          timestamp: new Date().toISOString(),
-        };
-        const palletCode = code.replace(/Shift/g, "").toUpperCase();
-        setBarcodePallet(palletCode);
-        setPalletIntermedio(palletCode);
-        dispatch(addEventToPaletizationLog(codeScannedEvent));
-        console.log("HDR Toy escaneando pallet2");
+        // Si la cadena es más corta, considerarla un ID de pallet. Se limpia
+        // el pallet anterior pero se conserva la orden seleccionada.
+        resetPalletState();
+        const palletCode = formattedCode.toUpperCase();
         if (
           metadata.length > 0 &&
           metadata.find((obj) => obj.ID_CARACTMATERIAL === 185)
@@ -271,29 +299,120 @@ function PaletizationView() {
           );
           return;
         }
-        console.log("HDR Toy escaneando pallet3 antes de create");
-        // Probablemente debamos borrar esto y solo llamar a getAllComponents
-        dispatch(
-          createPallet(
-            orderSelected.aufnr,
-            code.replace(/Shift/g, "").toUpperCase(),
-            orderSelected.matnr.slice(-9),
-            editablePalletAmount,
-            idAuto,
-          ),
-        );
-
-        const createPalletEvent = {
-          text: "Creando registro de Pallet: " + idAuto,
-          timestamp: new Date().toISOString(),
-        };
-        notifyPalletScanned(palletCode);
-        dispatch(getAllComponents(palletCode));
-
-        dispatch(addEventToPaletizationLog(createPalletEvent));
+        startPallet(palletCode);
       }
     },
   });
+
+  // Inicia (o retoma) el pallet escaneado con la orden seleccionada. Lo usa el
+  // escaneo y también la reasignación de orden, que vuelve a cargarlo.
+  function startPallet(palletCode) {
+    dispatch(
+      addEventToPaletizationLog({
+        text: "Pallet escaneado: " + palletCode,
+        timestamp: new Date().toISOString(),
+      })
+    );
+    setBarcodePallet(palletCode);
+    setPalletIntermedio(palletCode);
+    dispatch(
+      createPallet(
+        orderSelected.aufnr,
+        palletCode,
+        orderSelected.matnr.slice(-9),
+        editablePalletAmount,
+        idAuto,
+        () => {
+          // El API rechazó o no respondió: limpiar la tarjeta del pallet
+          setBarcodePallet("Nuevo pallet");
+          setPalletIntermedio(null);
+        },
+        (palletOrder) => {
+          setPalletOrderMismatchInfo({
+            pallet: palletCode,
+            palletOrder,
+            selectedOrder: orderSelected.aufnr,
+          });
+          setPalletOrderMismatchOpen(true);
+        }
+      )
+    );
+    notifyPalletScanned(palletCode);
+    dispatch(
+      addEventToPaletizationLog({
+        text: "Consultando registro de Pallet: " + palletCode,
+        timestamp: new Date().toISOString(),
+      })
+    );
+  }
+
+  // Reasignar el pallet a la orden seleccionada: candado con contraseña de
+  // administrador y después se vuelve a cargar el pallet con la orden nueva.
+  function handleRequestChangeOrder() {
+    setPalletOrderMismatchOpen(false);
+    setChangeOrderPasswordInput("");
+    setChangeOrderPasswordError(false);
+    setChangeOrderPasswordOpen(true);
+  }
+
+  async function handleConfirmChangeOrder() {
+    if (changeOrderPasswordInput !== CHANGE_ORDER_PASSWORD) {
+      setChangeOrderPasswordError(true);
+      return;
+    }
+    setChangeOrderPasswordOpen(false);
+    setChangeOrderPasswordInput("");
+    const { pallet } = palletOrderMismatchInfo;
+    const result = await dispatch(
+      changePalletOrder(pallet, orderSelected.aufnr, orderSelected.matnr.slice(-9))
+    );
+    if (result) {
+      notifyPalletScanned("Pallet " + pallet + " reasignado a la orden " + orderSelected.aufnr);
+      startPallet(pallet);
+    }
+  }
+
+  // Si cambian de orden con un pallet en curso, ese pallet queda ligado en BD
+  // a la orden anterior: se descarta en pantalla y hay que escanearlo de nuevo
+  // con la orden correcta. "Continuar pallet" sincroniza la orden con la del
+  // pallet, por lo que no se descarta en ese caso.
+  const prevAufnrRef = useRef(orderSelected?.aufnr);
+  useEffect(() => {
+    const prev = prevAufnrRef.current;
+    const current = orderSelected?.aufnr;
+    prevAufnrRef.current = current;
+    if (
+      prev &&
+      current &&
+      prev !== current &&
+      palletSelected?.identifier &&
+      palletSelected?.order &&
+      String(palletSelected.order) !== String(current)
+    ) {
+      const palletId = palletSelected.identifier;
+      resetPalletState();
+      notifyError(
+        "Cambiaste de orden: el pallet " +
+          palletId +
+          " se descartó. Escanea o crea el pallet de nuevo para la orden " +
+          current +
+          "."
+      );
+      dispatch(
+        addEventToPaletizationLog({
+          text:
+            "Orden cambiada de " +
+            prev +
+            " a " +
+            current +
+            " con pallet en curso. Pallet " +
+            palletId +
+            " descartado en pantalla.",
+          timestamp: new Date().toISOString(),
+        })
+      );
+    }
+  }, [orderSelected?.aufnr]);
 
   function handleCreatePallet(palletIdentifier) {
     dispatch(
@@ -387,7 +506,7 @@ function PaletizationView() {
     // Reiniciar el estado del pallet anterior (igual que "Nuevo" o al escanear
     // un pallet). Sin esto, hasProcessed quedaba en true tras procesar el pallet
     // anterior y el botón "Procesar" del nuevo pallet nunca se habilitaba.
-    handleNew();
+    resetPalletState();
     getLastPallet()
       .then((result) => {
         const { nuevoIdentificador, id } = result;
@@ -419,8 +538,9 @@ function PaletizationView() {
       });
   }
 
-  function handleNew() {
-    console.log("Handle new step");
+  // Limpia solo el pallet en curso (componentes, pruebas, modales); la orden
+  // seleccionada se conserva.
+  function resetPalletState() {
     dispatch(setPallet(null));
     setBarcodePallet("Nuevo pallet");
     setBarcodeProduct("Escanea producto");
@@ -428,21 +548,54 @@ function PaletizationView() {
     setHasProcessed(false);
     setPalletProductMismatchOpen(false);
     setPalletProductMismatchInfo({ expectedProduct: "", scannedProduct: "" });
+    setPalletOrderMismatchOpen(false);
 
     dispatch(setGlobalStatus(""));
     dispatch(setTestResults([]));
     dispatch(setComponentsJoined(false));
     dispatch(setComponents([]));
+  }
+
+  // Nuevo pallet: se reinicia todo, incluida la orden, y se pide elegirla de
+  // nuevo. Así un pallet nunca arranca con la orden del pallet anterior.
+  function handleNew() {
+    console.log("Handle new step");
+    resetPalletState();
+    dispatch(setOrderSelected({}));
+    dispatch(setMetadataOrderSelected([]));
+    prevAufnrRef.current = undefined;
     const handleNewEvent = {
-      text: "Comando NUEVO detectado. Proceso reiniciado.",
+      text: "Comando NUEVO detectado. Proceso reiniciado; selecciona la orden del nuevo pallet.",
       timestamp: new Date().toISOString(),
     };
     dispatch(addEventToPaletizationLog(handleNewEvent));
+    requestOpenOrders();
   }
 
-  function handleNotify() {
+  async function handleNotify() {
     setHasProcessed(true);
-    dispatch(processInSAP(orderSelected, palletSelected, componentsList));
+    const ok = await dispatch(processInSAP(orderSelected, palletSelected, componentsList));
+    if (ok) {
+      // SAP aceptó el pallet: reiniciar de cero para el siguiente. Se da un
+      // momento para que el operador vea la confirmación en pantalla.
+      const palletId = palletSelected?.identifier;
+      setTimeout(() => {
+        resetPalletState();
+        dispatch(setOrderSelected({}));
+        dispatch(setMetadataOrderSelected([]));
+        prevAufnrRef.current = undefined;
+        dispatch(
+          addEventToPaletizationLog({
+            text:
+              "Pallet " +
+              palletId +
+              " notificado a SAP. Proceso reiniciado; selecciona la orden del siguiente pallet.",
+            timestamp: new Date().toISOString(),
+          })
+        );
+        requestOpenOrders();
+      }, 2500);
+    }
   }
 
   const handlePalletAmountDoubleClick = () => {
@@ -993,6 +1146,92 @@ function PaletizationView() {
         expectedProduct={palletProductMismatchInfo.expectedProduct}
         scannedProduct={palletProductMismatchInfo.scannedProduct}
       />
+
+      <PalletOrderMismatchModal
+        open={palletOrderMismatchOpen}
+        onClose={() => setPalletOrderMismatchOpen(false)}
+        pallet={palletOrderMismatchInfo.pallet}
+        palletOrder={palletOrderMismatchInfo.palletOrder}
+        selectedOrder={palletOrderMismatchInfo.selectedOrder}
+        onChangeOrder={handleRequestChangeOrder}
+      />
+
+      {/* Contraseña de administrador para reasignar la orden del pallet */}
+      <ModalBlank
+        id="change-order-password-modal"
+        modalOpen={changeOrderPasswordOpen}
+        setModalOpen={setChangeOrderPasswordOpen}
+      >
+        <div className="p-5 flex space-x-4">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-secondary">
+            <svg
+              className="w-4 h-4 shrink-0 fill-current text-primary"
+              viewBox="0 0 16 16"
+            >
+              <path d="M8 0C3.6 0 0 3.6 0 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 12c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm1-3H7V4h2v5z" />
+            </svg>
+          </div>
+          <div className="w-full">
+            <div className="mb-2">
+              <div className="text-lg font-semibold text-slate-800">
+                Cambiar la orden del pallet
+              </div>
+            </div>
+            <div className="text-sm mb-6">
+              <p className="text-black">
+                El pallet{" "}
+                <span className="font-mono font-semibold">{palletOrderMismatchInfo.pallet}</span>{" "}
+                pasará de la orden{" "}
+                <span className="font-semibold">{palletOrderMismatchInfo.palletOrder}</span> a la
+                orden <span className="font-semibold">{orderSelected?.aufnr}</span>. Ingresa la
+                contraseña de administrador para autorizarlo.
+              </p>
+              <div className="mt-4">
+                <input
+                  type="password"
+                  autoFocus
+                  value={changeOrderPasswordInput}
+                  onChange={(e) => {
+                    setChangeOrderPasswordInput(e.target.value);
+                    if (changeOrderPasswordError) setChangeOrderPasswordError(false);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleConfirmChangeOrder();
+                    }
+                  }}
+                  className="form-input w-full h-12"
+                  placeholder="Contraseña"
+                />
+                {changeOrderPasswordError && (
+                  <p className="text-sm text-red-500 mt-2">Contraseña incorrecta.</p>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-end space-x-2">
+              <button
+                className="btn-sm border-slate-200 hover:border-slate-300 text-slate-600"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setChangeOrderPasswordOpen(false);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="btn-sm bg-primary hover:bg-primary-500 text-white"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleConfirmChangeOrder();
+                }}
+              >
+                Cambiar orden
+              </button>
+            </div>
+          </div>
+        </div>
+      </ModalBlank>
 
       {/* Password Modal (bloqueo previo a editar la cantidad de pallet) */}
       <ModalBlank
